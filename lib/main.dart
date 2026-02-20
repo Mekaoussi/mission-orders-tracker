@@ -2,6 +2,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:orders_tracker/main_screen.dart';
 import 'package:orders_tracker/people_provider.dart';
 import 'package:orders_tracker/sortie_provider.dart';
 import 'package:orders_tracker/stock_provider.dart';
@@ -32,9 +33,8 @@ Future<void> main() async {
             SortieProvider
           >(
             create: (_) => SortieProvider()..init(),
-            update: (_, stock, people, sortie) => sortie!
-              ..updateDependencies(stock, people)
-              ..init(), // Re-init to ensure list is fresh if needed, or just update deps
+            update: (_, stock, people, sortie) =>
+                sortie!..updateDependencies(stock, people),
           ),
         ],
         child: const MyApp(),
@@ -57,9 +57,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(child: Text('Stock Management App - Setup Phase')),
-      ),
+      home: const MainScreen(),
     );
   }
 }

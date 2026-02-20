@@ -9,8 +9,25 @@ class PeopleProvider extends ChangeNotifier {
   List<Person> get people => _people;
 
   Future<void> init() async {
-    _box = await Hive.openBox<Person>('people');
-    _people = _box!.values.toList();
+    try {
+      _box = await Hive.openBox<Person>('people');
+      _people = _box!.values.toList();
+    } on HiveError catch (e) {
+      debugPrint('HiveError during PeopleProvider init: $e');
+      // This can happen if the data model has changed and the on-disk data is incompatible.
+      // For development, we can clear the box to resolve this.
+      debugPrint('Clearing potentially corrupted "people" box.');
+      if (Hive.isBoxOpen('people')) {
+        await Hive.box('people').close();
+      }
+      await Future.delayed(
+        const Duration(milliseconds: 200),
+      ); // Wait for lock release
+      await Hive.deleteBoxFromDisk('people');
+      // Retry opening the box
+      _box = await Hive.openBox<Person>('people');
+      _people = _box!.values.toList();
+    }
     notifyListeners();
   }
 

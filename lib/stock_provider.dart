@@ -9,8 +9,25 @@ class StockProvider extends ChangeNotifier {
   List<Product> get products => _products;
 
   Future<void> init() async {
-    _box = await Hive.openBox<Product>('products');
-    _products = _box!.values.toList();
+    try {
+      _box = await Hive.openBox<Product>('products');
+      _products = _box!.values.toList();
+    } on HiveError catch (e) {
+      debugPrint('HiveError during StockProvider init: $e');
+      // This can happen if the data model has changed and the on-disk data is incompatible.
+      // For development, we can clear the box to resolve this.
+      debugPrint('Clearing potentially corrupted "products" box.');
+      if (Hive.isBoxOpen('products')) {
+        await Hive.box('products').close();
+      }
+      await Future.delayed(
+        const Duration(milliseconds: 200),
+      ); // Wait for lock release
+      await Hive.deleteBoxFromDisk('products');
+      // Retry opening the box
+      _box = await Hive.openBox<Product>('products');
+      _products = _box!.values.toList();
+    }
     notifyListeners();
   }
 

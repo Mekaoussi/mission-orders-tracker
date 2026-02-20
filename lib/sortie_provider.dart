@@ -23,10 +23,28 @@ class SortieProvider extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    _box = await Hive.openBox<Sortie>('sorties');
-    _sorties = _box!.values.toList();
-    // Sort by date descending (newest first)
-    _sorties.sort((a, b) => b.date.compareTo(a.date));
+    try {
+      _box = await Hive.openBox<Sortie>('sorties');
+      _sorties = _box!.values.toList();
+      // Sort by date descending (newest first)
+      _sorties.sort((a, b) => b.date.compareTo(a.date));
+    } on HiveError catch (e) {
+      debugPrint('HiveError during SortieProvider init: $e');
+      // This can happen if the data model has changed and the on-disk data is incompatible.
+      // For development, we can clear the box to resolve this.
+      debugPrint('Clearing potentially corrupted "sorties" box.');
+      if (Hive.isBoxOpen('sorties')) {
+        await Hive.box('sorties').close();
+      }
+      await Future.delayed(
+        const Duration(milliseconds: 200),
+      ); // Wait for lock release
+      await Hive.deleteBoxFromDisk('sorties');
+      // Retry opening the box
+      _box = await Hive.openBox<Sortie>('sorties');
+      _sorties = _box!.values.toList();
+      _sorties.sort((a, b) => b.date.compareTo(a.date));
+    }
     notifyListeners();
   }
 
