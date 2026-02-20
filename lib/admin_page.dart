@@ -113,7 +113,7 @@ class _PeopleTab extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showEditScoreDialog(context, person),
+                      onPressed: () => _showEditPersonDialog(context, person),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
@@ -190,36 +190,62 @@ class _PeopleTab extends StatelessWidget {
     );
   }
 
-  void _showEditScoreDialog(BuildContext context, Person person) {
+  void _showEditPersonDialog(BuildContext context, Person person) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: person.name);
+    final phoneController = TextEditingController(text: person.phone);
     final scoreController = TextEditingController(
       text: person.score.toString(),
     );
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Edit Score for ${person.name}'),
-        content: TextField(
-          controller: scoreController,
-          decoration: const InputDecoration(labelText: 'Score'),
-          keyboardType: TextInputType.number,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Edit ${person.name}'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: 'Phone'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: scoreController,
+                decoration: const InputDecoration(labelText: 'Score'),
+                keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Required';
+                  if (int.tryParse(v) == null) return 'Invalid number';
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              final newScore = int.tryParse(scoreController.text);
-              if (newScore != null) {
-                // Modify the score on the existing person object
-                person.score = newScore;
-                // Call the provider to save the changes to Hive
+              if (formKey.currentState!.validate()) {
+                person.name = nameController.text;
+                person.phone = phoneController.text;
+                person.score = int.parse(scoreController.text);
                 Provider.of<PeopleProvider>(
                   context,
                   listen: false,
                 ).updatePerson(person);
-                Navigator.pop(ctx);
+                Navigator.pop(dialogContext);
               }
             },
             child: const Text('Save'),
