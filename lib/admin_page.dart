@@ -108,9 +108,18 @@ class _PeopleTab extends StatelessWidget {
               return ListTile(
                 title: Text(person.name),
                 subtitle: Text('Score: ${person.score} | ${person.phone}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => provider.deletePerson(person),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditScoreDialog(context, person),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => provider.deletePerson(person),
+                    ),
+                  ],
                 ),
               );
             },
@@ -178,6 +187,45 @@ class _PeopleTab extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showEditScoreDialog(BuildContext context, Person person) {
+    final scoreController = TextEditingController(
+      text: person.score.toString(),
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Edit Score for ${person.name}'),
+        content: TextField(
+          controller: scoreController,
+          decoration: const InputDecoration(labelText: 'Score'),
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newScore = int.tryParse(scoreController.text);
+              if (newScore != null) {
+                // Modify the score on the existing person object
+                person.score = newScore;
+                // Call the provider to save the changes to Hive
+                Provider.of<PeopleProvider>(
+                  context,
+                  listen: false,
+                ).updatePerson(person);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
     );
   }
 }
