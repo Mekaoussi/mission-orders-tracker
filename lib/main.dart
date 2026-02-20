@@ -2,15 +2,44 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:orders_tracker/people_provider.dart';
+import 'package:orders_tracker/sortie_provider.dart';
+import 'package:orders_tracker/stock_provider.dart';
+import 'package:provider/provider.dart';
+
+import 'models.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // Adapters will be registered here later
+  // Register Adapters
+  Hive.registerAdapter(ProductAdapter());
+  Hive.registerAdapter(PersonAdapter());
+  Hive.registerAdapter(SortieItemAdapter());
+  Hive.registerAdapter(SortieAdapter());
 
   runApp(
-    DevicePreview(enabled: !kReleaseMode, builder: (context) => const MyApp()),
+    DevicePreview(
+      enabled: !kReleaseMode,
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => StockProvider()..init()),
+          ChangeNotifierProvider(create: (_) => PeopleProvider()..init()),
+          ChangeNotifierProxyProvider2<
+            StockProvider,
+            PeopleProvider,
+            SortieProvider
+          >(
+            create: (_) => SortieProvider()..init(),
+            update: (_, stock, people, sortie) => sortie!
+              ..updateDependencies(stock, people)
+              ..init(), // Re-init to ensure list is fresh if needed, or just update deps
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    ),
   );
 }
 
