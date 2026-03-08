@@ -86,64 +86,113 @@ class AdminPage extends StatelessWidget {
   }
 }
 
-class _ProductsTab extends StatelessWidget {
+class _ProductsTab extends StatefulWidget {
   const _ProductsTab();
+
+  @override
+  State<_ProductsTab> createState() => _ProductsTabState();
+}
+
+class _ProductsTabState extends State<_ProductsTab> {
+  String _selectedCategory = 'All';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer<StockProvider>(
-        builder: (context, provider, child) {
-          if (provider.products.isEmpty) {
-            return const Center(child: Text('No products.'));
-          }
-          return ListView.builder(
-            itemCount: provider.products.length,
-            itemBuilder: (context, index) {
-              final product = provider.products[index];
-              return ListTile(
-                title: Text(product.name),
-                subtitle: Text(
-                  '${product.type} | Init: ${product.initialQuantity}',
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showEditProductDialog(context, product),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Filter by Category',
+                border: OutlineInputBorder(),
+              ),
+              items: ['All', 'equipment', 'secs', 'frais']
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(
+                        category[0].toUpperCase() + category.substring(1),
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Delete Product'),
-                            content: Text('Delete ${product.name}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  provider.deleteProduct(product);
-                                  Navigator.pop(ctx);
-                                },
-                                child: const Text('Delete'),
-                              ),
-                            ],
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedCategory = value;
+                  });
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: Consumer<StockProvider>(
+              builder: (context, provider, child) {
+                final filteredProducts = _selectedCategory == 'All'
+                    ? provider.products
+                    : provider.products
+                          .where((p) => p.type == _selectedCategory)
+                          .toList();
+
+                if (filteredProducts.isEmpty) {
+                  return const Center(
+                    child: Text('No products in this category.'),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: filteredProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = filteredProducts[index];
+                    return ListTile(
+                      title: Text(product.name),
+                      subtitle: Text(
+                        '${product.type} | Init: ${product.initialQuantity}',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () =>
+                                _showEditProductDialog(context, product),
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Product'),
+                                  content: Text('Delete ${product.name}?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        provider.deleteProduct(product);
+                                        Navigator.pop(ctx);
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddProductDialog(context),
