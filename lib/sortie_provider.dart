@@ -14,8 +14,9 @@ class SortieProvider extends ChangeNotifier {
   List<Sortie> get sorties => _sorties;
   List<Sortie> get activeSorties =>
       _sorties.where((s) => s.status == 'active').toList();
-  List<Sortie> get historySorties =>
-      _sorties.where((s) => s.status == 'completed').toList();
+  List<Sortie> get historySorties => _sorties
+      .where((s) => s.status == 'completed' || s.status == 'cancelled')
+      .toList();
 
   void updateDependencies(StockProvider stock, PeopleProvider people) {
     _stockProvider = stock;
@@ -142,6 +143,22 @@ class SortieProvider extends ChangeNotifier {
 
     sortie.status = 'completed';
     sortie.completionDate = DateTime.now();
+    await sortie.save();
+
+    _sorties = _box!.values.toList();
+    _sorties.sort((a, b) => b.creationDate.compareTo(a.creationDate));
+    notifyListeners();
+  }
+
+  Future<void> cancelSortie(Sortie sortie) async {
+    if (_stockProvider == null) return;
+
+    // Return all items to stock
+    for (var item in sortie.items) {
+      await _stockProvider!.increaseStock(item.productId, item.quantityTaken);
+    }
+
+    sortie.status = 'cancelled';
     await sortie.save();
 
     _sorties = _box!.values.toList();

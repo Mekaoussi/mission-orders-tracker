@@ -172,6 +172,8 @@ class _SortieList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final peopleProvider = Provider.of<PeopleProvider>(context);
+
     return Consumer<SortieProvider>(
       builder: (context, provider, child) {
         final allSorties = status == 'active'
@@ -197,18 +199,66 @@ class _SortieList extends StatelessWidget {
             final sortie = list[index];
             final bool hasMissing =
                 status == 'completed' && sortie.hasMissingItems;
+            final bool isCancelled = sortie.status == 'cancelled';
+
+            final responsibleName = peopleProvider.people
+                .firstWhere(
+                  (p) => p.id == sortie.responsibleId,
+                  orElse: () =>
+                      Person(id: '', name: 'Inconnu', phone: '', role: ''),
+                )
+                .name;
 
             return Card(
               margin: const EdgeInsets.all(8.0),
-              color: hasMissing ? Colors.red.withOpacity(0.1) : null,
+              color: isCancelled
+                  ? Colors.red.withOpacity(0.2)
+                  : (hasMissing ? Colors.red.withOpacity(0.1) : null),
               child: ListTile(
                 title: Text('Sortie ${sortie.displayId}'),
                 subtitle: Text(
-                  'Départ: ${sortie.departureDate.day}/${sortie.departureDate.month}/${sortie.departureDate.year}\nArticles: ${sortie.items.length}',
+                  'Responsable: $responsibleName\nDépart: ${sortie.departureDate.day}/${sortie.departureDate.month}/${sortie.departureDate.year}\nArticles: ${sortie.items.length}',
                 ),
-                trailing: hasMissing
-                    ? const Icon(Icons.warning, color: Colors.red)
-                    : const Icon(Icons.arrow_forward_ios),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (status == 'active')
+                      IconButton(
+                        icon: const Icon(Icons.cancel, color: Colors.red),
+                        tooltip: 'Annuler la sortie',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Annuler la sortie ?'),
+                              content: const Text(
+                                'Voulez-vous vraiment annuler cette sortie ? Tous les articles seront remis en stock.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Non'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    provider.cancelSortie(sortie);
+                                    Navigator.pop(ctx);
+                                  },
+                                  child: const Text('Oui, Annuler'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    if (isCancelled)
+                      const Icon(Icons.block, color: Colors.red)
+                    else if (hasMissing)
+                      const Icon(Icons.warning, color: Colors.red)
+                    else
+                      const Icon(Icons.arrow_forward_ios),
+                  ],
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
