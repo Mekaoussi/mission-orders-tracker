@@ -138,8 +138,11 @@ class _SortiesPageState extends State<SortiesPage> {
               onPressed: () => _showMonthYearPicker(context),
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white.withOpacity(0.7),
+            indicatorColor: Colors.white,
+            tabs: const [
               Tab(text: 'Actives'),
               Tab(text: 'Historique'),
             ],
@@ -1032,7 +1035,6 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                   onPressed: () {
                     // Confirm Return
                     Provider.of<SortieProvider>(

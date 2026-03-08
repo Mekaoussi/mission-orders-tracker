@@ -29,7 +29,7 @@ class _StockPageState extends State<StockPage> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => setState(() => _selectedCategory = null),
             ),
-            title: Text(_selectedCategory!.toUpperCase()),
+            title: Text(_translateCategory(_selectedCategory!)),
             automaticallyImplyLeading: false,
           ),
           body: Consumer<StockProvider>(
@@ -82,22 +82,40 @@ class _StockPageState extends State<StockPage> {
             _buildCategoryCard(
               'Équipement',
               'equipment',
-              Icons.build,
-              Colors.blue,
+              Icons.construction,
+              Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            _buildCategoryCard('Secs', 'secs', Icons.grass, Colors.orange),
+            _buildCategoryCard(
+              'Secs',
+              'secs',
+              Icons.dry_cleaning,
+              Theme.of(context).colorScheme.secondary,
+            ),
             const SizedBox(height: 16),
             _buildCategoryCard(
               'Frais',
               'frais',
-              Icons.ac_unit,
-              Colors.lightBlue,
+              Icons.kitchen,
+              Colors.lightBlueAccent,
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _translateCategory(String category) {
+    switch (category) {
+      case 'equipment':
+        return 'Équipement';
+      case 'secs':
+        return 'Secs';
+      case 'frais':
+        return 'Frais';
+      default:
+        return 'Catégorie';
+    }
   }
 
   Widget _buildCategoryCard(
@@ -111,7 +129,6 @@ class _StockPageState extends State<StockPage> {
         onTap: () => setState(() => _selectedCategory = categoryValue),
         child: Card(
           color: color.withOpacity(0.1),
-          elevation: 4,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -27,8 +27,11 @@ class AdminPage extends StatelessWidget {
               onPressed: () => _showResetDatabaseDialog(context),
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white.withOpacity(0.7),
+            indicatorColor: Colors.white,
+            tabs: const [
               Tab(text: 'Produits'),
               Tab(text: 'Guides'),
               Tab(text: 'Cuisiniers'),
@@ -470,7 +473,7 @@ class _PeopleTab extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Add New $role'),
+          title: Text('Ajouter un nouveau $role'),
           content: Form(
             key: formKey,
             child: Column(
