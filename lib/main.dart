@@ -8,6 +8,7 @@ import 'package:orders_tracker/sortie_provider.dart';
 import 'package:orders_tracker/stock_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'constants.dart';
 import 'models.dart';
 
 Future<void> main() async {
@@ -21,11 +22,12 @@ Future<void> main() async {
   Hive.registerAdapter(SortieAdapter());
 
   // --- FOR DEVELOPMENT: Emergency Database Reset ---
-  // Uncomment the following lines to delete all data on app start.
+  // This list contains all Hive boxes used in the app.
+  // Uncomment the loop to delete all data on app start.
   // Useful if the app crashes due to data corruption.
-  // await Hive.deleteBoxFromDisk('products');
-  // await Hive.deleteBoxFromDisk('people');
-  // await Hive.deleteBoxFromDisk('sorties');
+  // for (final boxName in hiveBoxNames) {
+  //   await Hive.deleteBoxFromDisk(boxName);
+  // }
 
   runApp(
     DevicePreview(

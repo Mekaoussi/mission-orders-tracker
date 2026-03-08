@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'constants.dart';
 import 'models.dart';
 import 'people_provider.dart';
 import 'stock_provider.dart';
@@ -63,9 +64,9 @@ class AdminPage extends StatelessWidget {
               // Close all boxes to release file locks before deleting
               await Hive.close();
 
-              await Hive.deleteBoxFromDisk('products');
-              await Hive.deleteBoxFromDisk('people');
-              await Hive.deleteBoxFromDisk('sorties');
+              for (final boxName in hiveBoxNames) {
+                await Hive.deleteBoxFromDisk(boxName);
+              }
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
