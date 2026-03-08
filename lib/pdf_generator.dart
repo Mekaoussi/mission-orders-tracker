@@ -341,8 +341,8 @@ pw.Widget _buildSignatureBox(String title) {
       ),
       pw.SizedBox(height: 5),
       pw.Container(
-        width: 150,
-        height: 60,
+        width: 120,
+        height: 40,
         decoration: pw.BoxDecoration(
           border: pw.Border.all(color: PdfColors.grey),
         ),
