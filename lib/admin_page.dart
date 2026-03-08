@@ -242,7 +242,11 @@ class _ProductsTabState extends State<_ProductsTab> {
                           labelText: 'Initial Qty',
                         ),
                         keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Required';
+                          if (int.tryParse(v) == null) return 'Invalid number';
+                          return null;
+                        },
                       ),
                     ],
                   ),
@@ -321,7 +325,11 @@ class _ProductsTabState extends State<_ProductsTab> {
                           labelText: 'Initial Qty',
                         ),
                         keyboardType: TextInputType.number,
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Required';
+                          if (int.tryParse(v) == null) return 'Invalid number';
+                          return null;
+                        },
                       ),
                     ],
                   ),
@@ -389,7 +397,28 @@ class _PeopleTab extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => provider.deletePerson(person),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text('Delete $role'),
+                            content: Text('Delete ${person.name}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  provider.deletePerson(person);
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
