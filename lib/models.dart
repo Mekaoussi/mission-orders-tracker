@@ -116,6 +116,9 @@ class Sortie extends HiveObject {
   @HiveField(9)
   String displayId;
 
+  @HiveField(10)
+  DateTime? completionDate;
+
   Sortie({
     required this.id,
     required this.guideId,
@@ -127,6 +130,7 @@ class Sortie extends HiveObject {
     required this.departureDate,
     required this.returnDate,
     required this.displayId,
+    this.completionDate,
   });
 
   bool get hasMissingItems {

@@ -141,6 +141,7 @@ class SortieProvider extends ChangeNotifier {
     }
 
     sortie.status = 'completed';
+    sortie.completionDate = DateTime.now();
     await sortie.save();
 
     _sorties = _box!.values.toList();

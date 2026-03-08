@@ -668,6 +668,7 @@ class SortieDetailPage extends StatefulWidget {
 class _SortieDetailPageState extends State<SortieDetailPage> {
   // We keep a local copy of items to edit before saving
   late List<SortieItem> _items;
+  String _selectedCategory = 'All';
 
   @override
   void initState() {
@@ -750,21 +751,67 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                 title: const Text('Return Date'),
                 subtitle: Text(formatDate(widget.sortie.returnDate)),
               ),
+              if (widget.sortie.completionDate != null)
+                ListTile(
+                  leading: const Icon(Icons.check_circle_outline),
+                  title: const Text('Actual Completion Date'),
+                  subtitle: Text(formatDate(widget.sortie.completionDate!)),
+                ),
             ],
           ),
           const Divider(thickness: 2),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              'Items Details',
-              style: Theme.of(context).textTheme.titleMedium,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Items Details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                DropdownButton<String>(
+                  value: _selectedCategory,
+                  items: ['All', 'Equipment', 'Secs', 'Frais']
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedCategory = v!;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _items.length,
+              itemCount: _items.where((item) {
+                if (_selectedCategory == 'All') return true;
+                try {
+                  final product = stockProvider.products.firstWhere(
+                    (p) => p.id == item.productId,
+                  );
+                  return product.type.toLowerCase() ==
+                      _selectedCategory.toLowerCase();
+                } catch (e) {
+                  return false;
+                }
+              }).length,
               itemBuilder: (context, index) {
-                final item = _items[index];
+                final filteredItems = _items.where((item) {
+                  if (_selectedCategory == 'All') return true;
+                  try {
+                    final product = stockProvider.products.firstWhere(
+                      (p) => p.id == item.productId,
+                    );
+                    return product.type.toLowerCase() ==
+                        _selectedCategory.toLowerCase();
+                  } catch (e) {
+                    return false;
+                  }
+                }).toList();
+
+                final item = filteredItems[index];
                 // Find product name
                 final product = stockProvider.products.firstWhere(
                   (p) => p.id == item.productId,
