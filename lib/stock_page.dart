@@ -76,8 +76,7 @@ class _StockPageState extends State<StockPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
           children: [
             _buildCategoryCard(
               'Équipement',
@@ -85,19 +84,17 @@ class _StockPageState extends State<StockPage> {
               Icons.construction,
               Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 16),
             _buildCategoryCard(
               'Secs',
               'secs',
-              Icons.dry_cleaning,
+              Icons.takeout_dining,
               Theme.of(context).colorScheme.secondary,
             ),
-            const SizedBox(height: 16),
             _buildCategoryCard(
               'Frais',
               'frais',
               Icons.kitchen,
-              Colors.lightBlueAccent,
+              Colors.lightBlue,
             ),
           ],
         ),
@@ -124,24 +121,35 @@ class _StockPageState extends State<StockPage> {
     IconData icon,
     Color color,
   ) {
-    return Expanded(
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () => setState(() => _selectedCategory = categoryValue),
-        child: Card(
-          color: color.withOpacity(0.1),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
             children: [
-              Icon(icon, size: 80, color: color),
-              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 36, color: color),
+              ),
+              const SizedBox(width: 24),
               Text(
                 title.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
               ),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios, color: color.withOpacity(0.5)),
             ],
           ),
         ),
