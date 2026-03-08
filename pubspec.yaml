@@ -46,6 +46,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   device_preview: ^1.2.0
+  
+  # For searchable dropdowns
+  dropdown_search: ^5.0.6
 
 dev_dependencies:
   flutter_test:

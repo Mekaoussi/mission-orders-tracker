@@ -20,6 +20,13 @@ Future<void> main() async {
   Hive.registerAdapter(SortieItemAdapter());
   Hive.registerAdapter(SortieAdapter());
 
+  // --- FOR DEVELOPMENT: Emergency Database Reset ---
+  // Uncomment the following lines to delete all data on app start.
+  // Useful if the app crashes due to data corruption.
+  // await Hive.deleteBoxFromDisk('products');
+  // await Hive.deleteBoxFromDisk('people');
+  // await Hive.deleteBoxFromDisk('sorties');
+
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
 import 'models.dart';
 import 'people_provider.dart';
@@ -129,6 +130,16 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
         .toList();
     final allPeople = peopleProvider.people;
 
+    // --- LOGIC FOR SEARCHABLE DROPDOWNS ---
+    Person? findPersonById(List<Person> people, String? id) {
+      if (id == null) return null;
+      try {
+        return people.firstWhere((p) => p.id == id);
+      } catch (e) {
+        return null;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('New Sortie')),
       body: Column(
@@ -142,58 +153,93 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Responsible (Required)',
-                        border: OutlineInputBorder(),
+                    DropdownSearch<Person>(
+                      selectedItem: findPersonById(
+                        allPeople,
+                        _selectedResponsible,
                       ),
-                      items: allPeople
-                          .map(
-                            (p) => DropdownMenuItem(
-                              value: p.id,
-                              child: Text('${p.name} (${p.role})'),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) =>
-                          setState(() => _selectedResponsible = v),
+                      popupProps: PopupProps.menu(
+                        showSearchBox: true,
+                        searchFieldProps: const TextFieldProps(
+                          decoration: InputDecoration(
+                            labelText: "Search Person",
+                          ),
+                        ),
+                        itemBuilder: (context, person, isSelected) => ListTile(
+                          title: Text(person.name),
+                          subtitle: Text(person.role),
+                        ),
+                      ),
+                      items: allPeople,
+                      itemAsString: (Person p) => p.name,
+                      dropdownDecoratorProps: const DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                          labelText: "Responsible (Required)",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      onChanged: (Person? person) {
+                        setState(() => _selectedResponsible = person?.id);
+                      },
+                      validator: (p) =>
+                          p == null ? 'Responsible is required' : null,
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            decoration: const InputDecoration(
-                              labelText: 'Guide',
+                          child: DropdownSearch<Person>(
+                            selectedItem: findPersonById(
+                              guides,
+                              _selectedGuide,
                             ),
-                            items: guides
-                                .map(
-                                  (p) => DropdownMenuItem(
-                                    value: p.id,
-                                    child: Text(p.name),
+                            popupProps: PopupProps.menu(
+                              showSearchBox: true,
+                              searchFieldProps: const TextFieldProps(
+                                decoration: InputDecoration(
+                                  labelText: "Search Guide",
+                                ),
+                              ),
+                            ),
+                            items: guides,
+                            itemAsString: (Person p) => p.name,
+                            dropdownDecoratorProps:
+                                const DropDownDecoratorProps(
+                                  dropdownSearchDecoration: InputDecoration(
+                                    labelText: "Guide",
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (v) =>
-                                setState(() => _selectedGuide = v),
+                                ),
+                            onChanged: (Person? person) {
+                              setState(() => _selectedGuide = person?.id);
+                            },
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            decoration: const InputDecoration(
-                              labelText: 'Cuisinier',
+                          child: DropdownSearch<Person>(
+                            selectedItem: findPersonById(
+                              cuisiniers,
+                              _selectedCuisinier,
                             ),
-                            items: cuisiniers
-                                .map(
-                                  (p) => DropdownMenuItem(
-                                    value: p.id,
-                                    child: Text(p.name),
+                            popupProps: PopupProps.menu(
+                              showSearchBox: true,
+                              searchFieldProps: const TextFieldProps(
+                                decoration: InputDecoration(
+                                  labelText: "Search Cuisinier",
+                                ),
+                              ),
+                            ),
+                            items: cuisiniers,
+                            itemAsString: (Person p) => p.name,
+                            dropdownDecoratorProps:
+                                const DropDownDecoratorProps(
+                                  dropdownSearchDecoration: InputDecoration(
+                                    labelText: "Cuisinier",
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (v) =>
-                                setState(() => _selectedCuisinier = v),
+                                ),
+                            onChanged: (Person? person) {
+                              setState(() => _selectedCuisinier = person?.id);
+                            },
                           ),
                         ),
                       ],
@@ -231,23 +277,55 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: stockProvider.products.length,
-              itemBuilder: (context, index) {
-                final product = stockProvider.products[index];
-                // Filter by category
-                if (product.type != _selectedCategory) {
-                  return const SizedBox.shrink();
-                }
-                return ListTile(
-                  title: Text(product.name),
-                  subtitle: Text('In Stock: ${product.currentQuantity}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.green),
-                    onPressed: () {
-                      _showQuantityDialog(context, product);
-                    },
-                  ),
+            child: Consumer<StockProvider>(
+              builder: (context, stockProvider, child) {
+                final availableProducts = stockProvider.products
+                    .where((p) => p.type == _selectedCategory)
+                    .toList();
+
+                return ListView.builder(
+                  itemCount: availableProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = availableProducts[index];
+                    SortieItem? cartItem;
+                    try {
+                      cartItem = _cart.firstWhere(
+                        (item) => item.productId == product.id,
+                      );
+                    } catch (e) {
+                      cartItem = null;
+                    }
+                    final isAdded = cartItem != null;
+
+                    return ListTile(
+                      title: Text(product.name),
+                      subtitle: Text('In Stock: ${product.currentQuantity}'),
+                      trailing: isAdded
+                          ? TextButton.icon(
+                              icon: const Icon(Icons.edit),
+                              label: Text(
+                                'Taken: ${cartItem.quantityTaken}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onPressed: () => _showQuantityDialog(
+                                context,
+                                product,
+                                cartItem: cartItem,
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                color: Colors.green,
+                              ),
+                              tooltip: 'Add to cart',
+                              onPressed: () =>
+                                  _showQuantityDialog(context, product),
+                            ),
+                    );
+                  },
                 );
               },
             ),
@@ -275,18 +353,39 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
     );
   }
 
-  void _showQuantityDialog(BuildContext context, Product product) {
-    final controller = TextEditingController(text: '1');
+  void _showQuantityDialog(
+    BuildContext context,
+    Product product, {
+    SortieItem? cartItem,
+  }) {
+    final isEditing = cartItem != null;
+    final controller = TextEditingController(
+      text: isEditing ? cartItem.quantityTaken.toString() : '1',
+    );
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Add ${product.name}'),
+        title: Text(isEditing ? 'Edit ${product.name}' : 'Add ${product.name}'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: 'Quantity'),
+          autofocus: true,
         ),
         actions: [
+          if (isEditing)
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () {
+                setState(() {
+                  _cart.removeWhere((item) => item.productId == product.id);
+                });
+                Navigator.pop(ctx);
+              },
+              child: const Text('Remove'),
+            ),
+          const Spacer(),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
@@ -294,20 +393,42 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
           ElevatedButton(
             onPressed: () {
               final qty = int.tryParse(controller.text) ?? 0;
-              if (qty > 0 && qty <= product.currentQuantity) {
-                setState(() {
-                  _cart.add(
-                    SortieItem(productId: product.id, quantityTaken: qty),
-                  );
-                });
-                Navigator.pop(ctx);
-              } else {
+
+              if (qty < 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invalid quantity')),
+                  const SnackBar(content: Text('Quantity cannot be negative.')),
                 );
+                return;
               }
+              if (qty > product.currentQuantity) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Not enough in stock. Only ${product.currentQuantity} available.',
+                    ),
+                  ),
+                );
+                return;
+              }
+
+              setState(() {
+                if (isEditing) {
+                  if (qty > 0) {
+                    cartItem.quantityTaken = qty;
+                  } else {
+                    _cart.removeWhere((item) => item.productId == product.id);
+                  }
+                } else {
+                  if (qty > 0) {
+                    _cart.add(
+                      SortieItem(productId: product.id, quantityTaken: qty),
+                    );
+                  }
+                }
+              });
+              Navigator.pop(ctx);
             },
-            child: const Text('Add'),
+            child: Text(isEditing ? 'Update' : 'Add'),
           ),
         ],
       ),

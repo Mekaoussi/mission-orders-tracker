@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'models.dart';
 import 'people_provider.dart';
@@ -14,7 +15,14 @@ class AdminPage extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin'),
+          title: const Text('Admin Panel'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_forever, color: Colors.red),
+              tooltip: 'Reset Database',
+              onPressed: () => _showResetDatabaseDialog(context),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Products'),
@@ -30,6 +38,48 @@ class AdminPage extends StatelessWidget {
             _PeopleTab(role: 'cuisinier'),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showResetDatabaseDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Entire Database?'),
+        content: const Text(
+          'This will delete ALL data (products, people, sorties) and cannot be undone. The app will need to be restarted after this action.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx); // Close dialog
+
+              // Close all boxes to release file locks before deleting
+              await Hive.close();
+
+              await Hive.deleteBoxFromDisk('products');
+              await Hive.deleteBoxFromDisk('people');
+              await Hive.deleteBoxFromDisk('sorties');
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: Colors.red,
+                  content: Text(
+                    'Database deleted. Please RESTART the app now.',
+                  ),
+                  duration: Duration(seconds: 6),
+                ),
+              );
+            },
+            child: const Text('DELETE EVERYTHING'),
+          ),
+        ],
       ),
     );
   }
