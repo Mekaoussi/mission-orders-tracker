@@ -821,83 +821,85 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          ExpansionTile(
-            title: const Text('Résumé de la Sortie'),
-            initiallyExpanded: true,
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              ListTile(
-                leading: const Icon(Icons.flag),
-                title: const Text('Statut'),
-                subtitle: Text(widget.sortie.status.toUpperCase()),
-              ),
-              ListTile(
-                leading: const Icon(Icons.account_circle),
-                title: const Text('Responsable'),
-                subtitle: Text(getPersonName(widget.sortie.responsibleId)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.support_agent),
-                title: const Text('Guide'),
-                subtitle: Text(getPersonName(widget.sortie.guideId)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.soup_kitchen),
-                title: const Text('Cuisinier'),
-                subtitle: Text(getPersonName(widget.sortie.cuisinierId)),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.today),
-                title: const Text('Date de Création'),
-                subtitle: Text(formatDate(widget.sortie.creationDate)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.arrow_forward),
-                title: const Text('Date de Départ'),
-                subtitle: Text(formatDate(widget.sortie.departureDate)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.arrow_back),
-                title: const Text('Date de Retour'),
-                subtitle: Text(formatDate(widget.sortie.returnDate)),
-              ),
-              if (widget.sortie.completionDate != null)
-                ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: const Text('Date de Réalisation'),
-                  subtitle: Text(formatDate(widget.sortie.completionDate!)),
-                ),
-            ],
-          ),
-          const Divider(thickness: 2),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ExpansionTile(
+              title: const Text('Résumé de la Sortie'),
+              initiallyExpanded: true,
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                Text(
-                  'Détails des Articles',
-                  style: Theme.of(context).textTheme.titleMedium,
+                ListTile(
+                  leading: const Icon(Icons.flag),
+                  title: const Text('Statut'),
+                  subtitle: Text(widget.sortie.status.toUpperCase()),
                 ),
-                DropdownButton<String>(
-                  value: _selectedCategory,
-                  items: ['Tous', 'Équipement', 'Secs', 'Frais']
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) {
-                    setState(() {
-                      _selectedCategory = v!;
-                    });
-                  },
+                ListTile(
+                  leading: const Icon(Icons.account_circle),
+                  title: const Text('Responsable'),
+                  subtitle: Text(getPersonName(widget.sortie.responsibleId)),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.support_agent),
+                  title: const Text('Guide'),
+                  subtitle: Text(getPersonName(widget.sortie.guideId)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.soup_kitchen),
+                  title: const Text('Cuisinier'),
+                  subtitle: Text(getPersonName(widget.sortie.cuisinierId)),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.today),
+                  title: const Text('Date de Création'),
+                  subtitle: Text(formatDate(widget.sortie.creationDate)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.arrow_forward),
+                  title: const Text('Date de Départ'),
+                  subtitle: Text(formatDate(widget.sortie.departureDate)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.arrow_back),
+                  title: const Text('Date de Retour'),
+                  subtitle: Text(formatDate(widget.sortie.returnDate)),
+                ),
+                if (widget.sortie.completionDate != null)
+                  ListTile(
+                    leading: const Icon(Icons.check_circle_outline),
+                    title: const Text('Date de Réalisation'),
+                    subtitle: Text(formatDate(widget.sortie.completionDate!)),
+                  ),
               ],
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
+            const Divider(thickness: 2),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Détails des Articles',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  DropdownButton<String>(
+                    value: _selectedCategory,
+                    items: ['Tous', 'Équipement', 'Secs', 'Frais']
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                    onChanged: (v) {
+                      setState(() {
+                        _selectedCategory = v!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _items.where((item) {
                 if (_selectedCategory == 'Tous') return true;
                 try {
@@ -1027,30 +1029,30 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                 );
               },
             ),
-          ),
-          if (!isReadOnly)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Confirm Return
-                    Provider.of<SortieProvider>(
-                      context,
-                      listen: false,
-                    ).completeSortie(widget.sortie, _items);
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    'CLÔTURER LA SORTIE (RETOUR)',
-                    style: TextStyle(color: Colors.white),
+            if (!isReadOnly)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Confirm Return
+                      Provider.of<SortieProvider>(
+                        context,
+                        listen: false,
+                      ).completeSortie(widget.sortie, _items);
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'CLÔTURER LA SORTIE (RETOUR)',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
