@@ -31,7 +31,7 @@ Future<void> main() async {
 
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: false, //kReleaseMode,
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => StockProvider()..init()),

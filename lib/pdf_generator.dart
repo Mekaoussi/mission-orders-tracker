@@ -8,6 +8,33 @@ import 'package:pdf/widgets.dart' as pw;
 
 import 'models.dart';
 
+/// Creates a user-accessible directory for reports and returns the path to a specific subfolder.
+///
+/// On Android, this tries to use external storage (Android/data/package/files)
+/// so files are visible in file managers.
+Future<String> _getReportPath(String subfolder) async {
+  Directory? directory;
+  try {
+    if (Platform.isAndroid) {
+      directory = await getExternalStorageDirectory();
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      directory = await getDownloadsDirectory();
+    }
+  } catch (e) {
+    // Fallback to documents if specific directories fail
+  }
+
+  directory ??= await getApplicationDocumentsDirectory();
+
+  final reportPath =
+      '${directory.path}${Platform.pathSeparator}Gestion_Stock${Platform.pathSeparator}$subfolder';
+  final reportDir = Directory(reportPath);
+  if (!await reportDir.exists()) {
+    await reportDir.create(recursive: true);
+  }
+  return reportPath;
+}
+
 Future<void> generateMultiSortieReportPdf({
   required Person person,
   required List<Sortie> sorties,
@@ -109,9 +136,9 @@ Future<void> generateMultiSortieReportPdf({
     ),
   );
 
-  final output = await getApplicationDocumentsDirectory();
+  final reportPath = await _getReportPath('Rapports_Personnel');
   final fileName = "Rapport_${person.name.replaceAll(' ', '_')}.pdf";
-  final file = File('${output.path}/$fileName');
+  final file = File('$reportPath${Platform.pathSeparator}$fileName');
   await file.writeAsBytes(await pdf.save());
   await OpenFile.open(file.path);
 }
@@ -162,9 +189,9 @@ Future<void> generateSortiePdf(
     ),
   );
 
-  final output = await getApplicationDocumentsDirectory();
+  final reportPath = await _getReportPath('Bons_Sortie');
   final fileName = "Sortie_${sortie.displayId}.pdf";
-  final file = File('${output.path}/$fileName');
+  final file = File('$reportPath${Platform.pathSeparator}$fileName');
   await file.writeAsBytes(await pdf.save());
   await OpenFile.open(file.path);
 }

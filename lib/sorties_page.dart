@@ -643,11 +643,17 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
         title: Text(
           isEditing ? 'Modifier ${product.name}' : 'Ajouter ${product.name}',
         ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Quantité'),
-          autofocus: true,
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Quantité'),
+              autofocus: true,
+            ),
+          ],
         ),
         actions: [
           if (isEditing)
