@@ -105,7 +105,16 @@ class Sortie extends HiveObject {
   String status; // "active", "completed"
 
   @HiveField(6)
-  DateTime date;
+  DateTime creationDate;
+
+  @HiveField(7)
+  DateTime departureDate;
+
+  @HiveField(8)
+  DateTime returnDate;
+
+  @HiveField(9)
+  String displayId;
 
   Sortie({
     required this.id,
@@ -114,6 +123,20 @@ class Sortie extends HiveObject {
     required this.responsibleId,
     required this.items,
     required this.status,
-    required this.date,
+    required this.creationDate,
+    required this.departureDate,
+    required this.returnDate,
+    required this.displayId,
   });
+
+  bool get hasMissingItems {
+    if (status != 'completed') return false;
+    for (final item in items) {
+      // If any item was not fully returned, there are missing items.
+      if (item.quantityReturned < item.quantityTaken) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

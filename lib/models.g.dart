@@ -164,14 +164,17 @@ class SortieAdapter extends TypeAdapter<Sortie> {
       responsibleId: fields[3] as String,
       items: (fields[4] as List).cast<SortieItem>(),
       status: fields[5] as String,
-      date: fields[6] as DateTime,
+      creationDate: fields[6] as DateTime,
+      departureDate: fields[7] as DateTime,
+      returnDate: fields[8] as DateTime,
+      displayId: fields[9] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Sortie obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -185,7 +188,13 @@ class SortieAdapter extends TypeAdapter<Sortie> {
       ..writeByte(5)
       ..write(obj.status)
       ..writeByte(6)
-      ..write(obj.date);
+      ..write(obj.creationDate)
+      ..writeByte(7)
+      ..write(obj.departureDate)
+      ..writeByte(8)
+      ..write(obj.returnDate)
+      ..writeByte(9)
+      ..write(obj.displayId);
   }
 
   @override

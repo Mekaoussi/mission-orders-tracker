@@ -7,8 +7,115 @@ import 'people_provider.dart';
 import 'sortie_provider.dart';
 import 'stock_provider.dart';
 
-class SortiesPage extends StatelessWidget {
+class SortiesPage extends StatefulWidget {
   const SortiesPage({super.key});
+
+  @override
+  State<SortiesPage> createState() => _SortiesPageState();
+}
+
+class _SortiesPageState extends State<SortiesPage> {
+  DateTime _selectedDate = DateTime.now();
+
+  void _showMonthYearPicker(BuildContext context) {
+    final yearController = TextEditingController(
+      text: _selectedDate.year.toString(),
+    );
+    int selectedMonth = _selectedDate.month;
+    const frenchMonths = [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Sélectionner un mois'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: yearController,
+                    decoration: const InputDecoration(labelText: 'Année'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 20),
+                  DropdownButton<int>(
+                    value: selectedMonth,
+                    isExpanded: true,
+                    items: List.generate(12, (index) {
+                      return DropdownMenuItem<int>(
+                        value: index + 1,
+                        child: Text(frenchMonths[index]),
+                      );
+                    }),
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedMonth = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Annuler'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                final year = int.tryParse(yearController.text);
+                if (year != null) {
+                  this.setState(() {
+                    _selectedDate = DateTime(year, selectedMonth);
+                  });
+                }
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getMonthName(int month) {
+    const frenchMonths = [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
+    ];
+    return frenchMonths[month - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +123,20 @@ class SortiesPage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Sorties Manager'),
+          title: Text(
+            'Sorties (${_getMonthName(_selectedDate.month)} ${_selectedDate.year})',
+          ),
           leading: IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.calendar_month),
+              tooltip: 'Select Month',
+              onPressed: () => _showMonthYearPicker(context),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Active'),
@@ -30,8 +146,8 @@ class SortiesPage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _SortieList(status: 'active'),
-            _SortieList(status: 'completed'),
+            _SortieList(status: 'active', selectedDate: _selectedDate),
+            _SortieList(status: 'completed', selectedDate: _selectedDate),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -50,36 +166,45 @@ class SortiesPage extends StatelessWidget {
 
 class _SortieList extends StatelessWidget {
   final String status;
-  const _SortieList({required this.status});
+  final DateTime selectedDate;
+  const _SortieList({required this.status, required this.selectedDate});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<SortieProvider>(
       builder: (context, provider, child) {
-        final list = status == 'active'
+        final allSorties = status == 'active'
             ? provider.activeSorties
             : provider.historySorties;
 
+        // Filter by selected month and year based on departure date
+        final list = allSorties.where((s) {
+          return s.departureDate.year == selectedDate.year &&
+              s.departureDate.month == selectedDate.month;
+        }).toList();
+
         if (list.isEmpty) {
-          return Center(child: Text('No $status sorties.'));
+          return Center(child: Text('No $status sorties for this month.'));
         }
 
         return ListView.builder(
           itemCount: list.length,
           itemBuilder: (context, index) {
             final sortie = list[index];
-            // Helper to get names would be nice, but we'll just show IDs or simple info for now
-            // In a real app, you'd look up the Person object by ID to show the name.
+            final bool hasMissing =
+                status == 'completed' && sortie.hasMissingItems;
+
             return Card(
               margin: const EdgeInsets.all(8.0),
+              color: hasMissing ? Colors.red.withOpacity(0.1) : null,
               child: ListTile(
-                title: Text(
-                  'Sortie #${sortie.id.substring(sortie.id.length - 4)}',
-                ),
+                title: Text('Sortie ${sortie.displayId}'),
                 subtitle: Text(
-                  'Date: ${sortie.date.toString().split('.')[0]}\nItems: ${sortie.items.length}',
+                  'Depart: ${sortie.departureDate.day}/${sortie.departureDate.month}/${sortie.departureDate.year}\nItems: ${sortie.items.length}',
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+                trailing: hasMissing
+                    ? const Icon(Icons.warning, color: Colors.red)
+                    : const Icon(Icons.arrow_forward_ios),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -113,9 +238,33 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
   String? _selectedGuide;
   String? _selectedCuisinier;
   final List<SortieItem> _cart = [];
+  DateTime? _departureDate;
+  DateTime? _returnDate;
 
   // Product Selection State
   String _selectedCategory = 'equipment';
+
+  // Helper for date picking
+  Future<void> _selectDate(BuildContext context, bool isDeparture) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate:
+          (isDeparture ? _departureDate : _returnDate) ??
+          _departureDate ??
+          DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isDeparture) {
+          _departureDate = picked;
+        } else {
+          _returnDate = picked;
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +399,54 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
             ],
           ),
 
+          // Dates Selection
+          ExpansionTile(
+            title: const Text('Dates'),
+            initiallyExpanded: true,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _selectDate(context, true),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Departure Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          child: Text(
+                            _departureDate == null
+                                ? 'Select Date'
+                                : '${_departureDate!.day}/${_departureDate!.month}/${_departureDate!.year}',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _selectDate(context, false),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Return Date',
+                            border: OutlineInputBorder(),
+                          ),
+                          child: Text(
+                            _returnDate == null
+                                ? 'Select Date'
+                                : '${_returnDate!.day}/${_returnDate!.month}/${_returnDate!.year}',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
           // 2. Product Selection
           const Divider(),
           Padding(
@@ -340,7 +537,11 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
               children: [
                 Text('Items to take: ${_cart.length}'),
                 ElevatedButton(
-                  onPressed: _selectedResponsible == null || _cart.isEmpty
+                  onPressed:
+                      _selectedResponsible == null ||
+                          _cart.isEmpty ||
+                          _departureDate == null ||
+                          _returnDate == null
                       ? null
                       : _createSortie,
                   child: const Text('CONFIRM SORTIE'),
@@ -436,12 +637,17 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
   }
 
   void _createSortie() {
-    if (_selectedResponsible == null) return;
+    if (_selectedResponsible == null ||
+        _departureDate == null ||
+        _returnDate == null)
+      return;
     Provider.of<SortieProvider>(context, listen: false).createSortie(
       guideId: _selectedGuide ?? '',
       cuisinierId: _selectedCuisinier,
       responsibleId: _selectedResponsible!,
       items: _cart,
+      departureDate: _departureDate!,
+      returnDate: _returnDate!,
     );
     Navigator.pop(context);
   }
@@ -492,7 +698,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
           // Header Info
           ListTile(
             title: Text('Status: ${widget.sortie.status.toUpperCase()}'),
-            subtitle: Text('Date: ${widget.sortie.date}'),
+            subtitle: Text('Created: ${widget.sortie.creationDate}'),
             tileColor: isReadOnly ? Colors.grey[200] : Colors.blue[50],
           ),
           Expanded(

@@ -27,7 +27,7 @@ class SortieProvider extends ChangeNotifier {
       _box = await Hive.openBox<Sortie>('sorties');
       _sorties = _box!.values.toList();
       // Sort by date descending (newest first)
-      _sorties.sort((a, b) => b.date.compareTo(a.date));
+      _sorties.sort((a, b) => b.creationDate.compareTo(a.creationDate));
     } on HiveError catch (e) {
       debugPrint('HiveError during SortieProvider init: $e');
       // This can happen if the data model has changed and the on-disk data is incompatible.
@@ -43,7 +43,7 @@ class SortieProvider extends ChangeNotifier {
       // Retry opening the box
       _box = await Hive.openBox<Sortie>('sorties');
       _sorties = _box!.values.toList();
-      _sorties.sort((a, b) => b.date.compareTo(a.date));
+      _sorties.sort((a, b) => b.creationDate.compareTo(a.creationDate));
     }
     notifyListeners();
   }
@@ -53,17 +53,30 @@ class SortieProvider extends ChangeNotifier {
     String? cuisinierId,
     required String responsibleId,
     required List<SortieItem> items,
+    required DateTime departureDate,
+    required DateTime returnDate,
   }) async {
     if (_box == null || _stockProvider == null) return;
 
+    // Generate displayId like "2024-001"
+    final year = departureDate.year;
+    final sortiesInYear = _box!.values
+        .where((s) => s.departureDate.year == year)
+        .length;
+    final sequence = (sortiesInYear + 1).toString().padLeft(3, '0');
+    final displayId = '$year-$sequence';
+
     final newSortie = Sortie(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      displayId: displayId,
       guideId: guideId,
       cuisinierId: cuisinierId,
       responsibleId: responsibleId,
       items: items,
       status: 'active',
-      date: DateTime.now(),
+      creationDate: DateTime.now(),
+      departureDate: departureDate,
+      returnDate: returnDate,
     );
 
     // Decrease stock immediately
@@ -73,7 +86,7 @@ class SortieProvider extends ChangeNotifier {
 
     await _box!.add(newSortie);
     _sorties = _box!.values.toList();
-    _sorties.sort((a, b) => b.date.compareTo(a.date));
+    _sorties.sort((a, b) => b.creationDate.compareTo(a.creationDate));
     notifyListeners();
   }
 
@@ -131,7 +144,7 @@ class SortieProvider extends ChangeNotifier {
     await sortie.save();
 
     _sorties = _box!.values.toList();
-    _sorties.sort((a, b) => b.date.compareTo(a.date));
+    _sorties.sort((a, b) => b.creationDate.compareTo(a.creationDate));
     notifyListeners();
   }
 }
