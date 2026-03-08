@@ -40,44 +40,216 @@ class _ProductsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<StockProvider>(
-      builder: (context, provider, child) {
-        if (provider.products.isEmpty) {
-          return const Center(child: Text('No products.'));
-        }
-        return ListView.builder(
-          itemCount: provider.products.length,
-          itemBuilder: (context, index) {
-            final product = provider.products[index];
-            return ListTile(
-              title: Text(product.name),
-              subtitle: Text(product.type),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  // Confirm delete
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Delete Product'),
-                      content: Text('Delete ${product.name}?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            provider.deleteProduct(product);
-                            Navigator.pop(ctx);
-                          },
-                          child: const Text('Delete'),
-                        ),
-                      ],
+    return Scaffold(
+      body: Consumer<StockProvider>(
+        builder: (context, provider, child) {
+          if (provider.products.isEmpty) {
+            return const Center(child: Text('No products.'));
+          }
+          return ListView.builder(
+            itemCount: provider.products.length,
+            itemBuilder: (context, index) {
+              final product = provider.products[index];
+              return ListTile(
+                title: Text(product.name),
+                subtitle: Text(
+                  '${product.type} | Init: ${product.initialQuantity}',
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditProductDialog(context, product),
                     ),
-                  );
-                },
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Delete Product'),
+                            content: Text('Delete ${product.name}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  provider.deleteProduct(product);
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddProductDialog(context),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddProductDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final quantityController = TextEditingController();
+    String? selectedType;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Product'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                      DropdownButtonFormField<String>(
+                        value: selectedType,
+                        hint: const Text('Type'),
+                        items: ['equipment', 'secs', 'frais']
+                            .map(
+                              (t) => DropdownMenuItem(value: t, child: Text(t)),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => selectedType = v),
+                        validator: (v) => v == null ? 'Required' : null,
+                      ),
+                      TextFormField(
+                        controller: quantityController,
+                        decoration: const InputDecoration(
+                          labelText: 'Initial Qty',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                    ],
+                  ),
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      final newProduct = Product(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: nameController.text,
+                        type: selectedType!,
+                        initialQuantity: int.parse(quantityController.text),
+                        currentQuantity: int.parse(quantityController.text),
+                      );
+                      Provider.of<StockProvider>(
+                        context,
+                        listen: false,
+                      ).addProduct(newProduct);
+                      Navigator.pop(dialogContext);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditProductDialog(BuildContext context, Product product) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: product.name);
+    final quantityController = TextEditingController(
+      text: product.initialQuantity.toString(),
+    );
+    String? selectedType = product.type;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Edit ${product.name}'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                      DropdownButtonFormField<String>(
+                        value: selectedType,
+                        items: ['equipment', 'secs', 'frais']
+                            .map(
+                              (t) => DropdownMenuItem(value: t, child: Text(t)),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => selectedType = v),
+                      ),
+                      TextFormField(
+                        controller: quantityController,
+                        decoration: const InputDecoration(
+                          labelText: 'Initial Qty',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      product.name = nameController.text;
+                      product.type = selectedType!;
+                      product.initialQuantity = int.parse(
+                        quantityController.text,
+                      );
+                      Provider.of<StockProvider>(
+                        context,
+                        listen: false,
+                      ).updateProduct(product);
+                      Navigator.pop(dialogContext);
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
             );
           },
         );

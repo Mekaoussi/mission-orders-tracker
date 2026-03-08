@@ -79,29 +79,53 @@ class SortieProvider extends ChangeNotifier {
 
   Future<void> completeSortie(
     Sortie sortie,
-    Map<String, int> returnedQuantities,
+    List<SortieItem> updatedItems,
   ) async {
     if (_peopleProvider == null || _stockProvider == null) return;
 
-    int totalMissing = 0;
+    int scorePenalty = 0;
+    List<String> incidentNotes = [];
 
-    for (var item in sortie.items) {
-      final returned = returnedQuantities[item.productId] ?? 0;
-      item.quantityReturned = returned;
+    for (var item in updatedItems) {
+      // Update the original item with return details
+      final originalItem = sortie.items.firstWhere(
+        (i) => i.productId == item.productId,
+      );
+      originalItem.quantityReturned = item.quantityReturned;
+      originalItem.note = item.note;
+      originalItem.isExcused = item.isExcused;
 
       // Calculate missing
-      final missing = (item.quantityTaken - returned).clamp(0, 9999);
-      totalMissing += missing;
+      final missing =
+          (originalItem.quantityTaken - originalItem.quantityReturned).clamp(
+            0,
+            9999,
+          );
 
       // Return items to stock
-      if (returned > 0) {
-        await _stockProvider!.increaseStock(item.productId, returned);
+      if (originalItem.quantityReturned > 0) {
+        await _stockProvider!.increaseStock(
+          originalItem.productId,
+          originalItem.quantityReturned,
+        );
+      }
+
+      // Logic: If missing > 0 and NOT excused, apply penalty and log history
+      if (missing > 0 && !originalItem.isExcused) {
+        scorePenalty += missing; // -1 point per missing item
+        incidentNotes.add(
+          "${DateTime.now().toString().split(' ')[0]}: Missing $missing x (Prod ID: ${originalItem.productId}). Note: ${originalItem.note ?? 'No details'}",
+        );
       }
     }
 
-    // Score logic
-    final scoreDelta = (totalMissing == 0) ? 10 : -(totalMissing * 2);
-    await _peopleProvider!.updateScore(sortie.responsibleId, scoreDelta);
+    // Apply Score (If clean, maybe +1 bonus? Or just 0. Here we only deduct for faults)
+    if (scorePenalty > 0) {
+      await _peopleProvider!.updateScore(sortie.responsibleId, -scorePenalty);
+      for (var note in incidentNotes) {
+        await _peopleProvider!.addHistory(sortie.responsibleId, note);
+      }
+    }
 
     sortie.status = 'completed';
     await sortie.save();

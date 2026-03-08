@@ -4,147 +4,116 @@ import 'package:provider/provider.dart';
 import '../models.dart';
 import '../stock_provider.dart';
 
-class StockPage extends StatelessWidget {
+class StockPage extends StatefulWidget {
   const StockPage({super.key});
 
   @override
+  State<StockPage> createState() => _StockPageState();
+}
+
+class _StockPageState extends State<StockPage> {
+  String? _selectedCategory;
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Stock')),
-      body: Consumer<StockProvider>(
-        builder: (context, provider, child) {
-          if (provider.products.isEmpty) {
-            return const Center(child: Text('No products in stock.'));
-          }
-          return ListView.builder(
-            itemCount: provider.products.length,
-            itemBuilder: (context, index) {
-              final product = provider.products[index];
-              return ListTile(
-                title: Text(product.name),
-                subtitle: Text('Type: ${product.type}'),
-                trailing: Text(
-                  'Qty: ${product.currentQuantity} / ${product.initialQuantity}',
-                ),
+    // 1. If a category is selected, show the list
+    if (_selectedCategory != null) {
+      return WillPopScope(
+        onWillPop: () async {
+          setState(() => _selectedCategory = null);
+          return false;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => setState(() => _selectedCategory = null),
+            ),
+            title: Text(_selectedCategory!.toUpperCase()),
+            automaticallyImplyLeading: false,
+          ),
+          body: Consumer<StockProvider>(
+            builder: (context, provider, child) {
+              final products = provider.products
+                  .where((p) => p.type == _selectedCategory)
+                  .toList();
+
+              if (products.isEmpty) {
+                return const Center(
+                  child: Text('No products in this category.'),
+                );
+              }
+              return ListView.builder(
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return ListTile(
+                    title: Text(product.name),
+                    trailing: Text(
+                      '${product.currentQuantity} / ${product.initialQuantity}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ),
+      );
+    }
+
+    // 2. Otherwise, show the Category Selection
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Stock Viewer'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddProductDialog(context),
-        tooltip: 'Add Product',
-        child: const Icon(Icons.add),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildCategoryCard('equipment', Icons.build, Colors.blue),
+            const SizedBox(height: 16),
+            _buildCategoryCard('secs', Icons.grass, Colors.orange),
+            const SizedBox(height: 16),
+            _buildCategoryCard('frais', Icons.ac_unit, Colors.lightBlue),
+          ],
+        ),
       ),
     );
   }
 
-  void _showAddProductDialog(BuildContext context) {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController();
-    final quantityController = TextEditingController();
-    String? selectedType;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Add New Product'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Product Name',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a name';
-                          }
-                          return null;
-                        },
-                      ),
-                      DropdownButtonFormField<String>(
-                        value: selectedType,
-                        hint: const Text('Select Type'),
-                        items: ['equipment', 'secs', 'frais']
-                            .map(
-                              (type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedType = value;
-                          });
-                        },
-                        validator: (value) =>
-                            value == null ? 'Please select a type' : null,
-                      ),
-                      TextFormField(
-                        controller: quantityController,
-                        decoration: const InputDecoration(
-                          labelText: 'Initial Quantity',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a quantity';
-                          }
-                          if (int.tryParse(value) == null ||
-                              int.parse(value) < 0) {
-                            return 'Please enter a valid positive number';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
+  Widget _buildCategoryCard(String title, IconData icon, Color color) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _selectedCategory = title),
+        child: Card(
+          color: color.withOpacity(0.1),
+          elevation: 4,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 64, color: color),
+              const SizedBox(height: 16),
+              Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
-                      final name = nameController.text;
-                      final quantity = int.parse(quantityController.text);
-                      final type = selectedType!;
-
-                      final newProduct = Product(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        name: name,
-                        type: type,
-                        initialQuantity: quantity,
-                        currentQuantity: quantity,
-                      );
-
-                      Provider.of<StockProvider>(
-                        context,
-                        listen: false,
-                      ).addProduct(newProduct);
-
-                      Navigator.of(dialogContext).pop();
-                    }
-                  },
-                  child: const Text('Add'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

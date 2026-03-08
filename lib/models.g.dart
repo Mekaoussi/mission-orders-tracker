@@ -68,13 +68,14 @@ class PersonAdapter extends TypeAdapter<Person> {
       phone: fields[2] as String,
       role: fields[3] as String,
       score: fields[4] as int,
+      history: (fields[5] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Person obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -84,7 +85,9 @@ class PersonAdapter extends TypeAdapter<Person> {
       ..writeByte(3)
       ..write(obj.role)
       ..writeByte(4)
-      ..write(obj.score);
+      ..write(obj.score)
+      ..writeByte(5)
+      ..write(obj.history);
   }
 
   @override
@@ -112,19 +115,25 @@ class SortieItemAdapter extends TypeAdapter<SortieItem> {
       productId: fields[0] as String,
       quantityTaken: fields[1] as int,
       quantityReturned: fields[2] as int,
+      note: fields[3] as String?,
+      isExcused: fields[4] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, SortieItem obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.productId)
       ..writeByte(1)
       ..write(obj.quantityTaken)
       ..writeByte(2)
-      ..write(obj.quantityReturned);
+      ..write(obj.quantityReturned)
+      ..writeByte(3)
+      ..write(obj.note)
+      ..writeByte(4)
+      ..write(obj.isExcused);
   }
 
   @override

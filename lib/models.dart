@@ -45,12 +45,16 @@ class Person extends HiveObject {
   @HiveField(4)
   int score;
 
+  @HiveField(5)
+  List<String> history;
+
   Person({
     required this.id,
     required this.name,
     required this.phone,
     required this.role,
     this.score = 0,
+    this.history = const [],
   });
 }
 
@@ -65,10 +69,18 @@ class SortieItem {
   @HiveField(2)
   int quantityReturned;
 
+  @HiveField(3)
+  String? note;
+
+  @HiveField(4)
+  bool isExcused;
+
   SortieItem({
     required this.productId,
     required this.quantityTaken,
     this.quantityReturned = 0,
+    this.note,
+    this.isExcused = false,
   });
 }
 

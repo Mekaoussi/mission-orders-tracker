@@ -12,8 +12,8 @@ class PeopleProvider extends ChangeNotifier {
     try {
       _box = await Hive.openBox<Person>('people');
       _people = _box!.values.toList();
-    } on HiveError catch (e) {
-      debugPrint('HiveError during PeopleProvider init: $e');
+    } catch (e) {
+      debugPrint('Error during PeopleProvider init: $e');
       // This can happen if the data model has changed and the on-disk data is incompatible.
       // For development, we can clear the box to resolve this.
       debugPrint('Clearing potentially corrupted "people" box.');
@@ -61,6 +61,18 @@ class PeopleProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Person not found for score update: $personId");
+    }
+  }
+
+  // Add a history note (e.g. for broken/missing items)
+  Future<void> addHistory(String personId, String note) async {
+    try {
+      final person = _people.firstWhere((p) => p.id == personId);
+      person.history = [...person.history, note];
+      await person.save();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Person not found for history update: $personId");
     }
   }
 }
