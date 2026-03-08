@@ -5,6 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'constants.dart';
 import 'models.dart';
 import 'people_provider.dart';
+import 'pdf_generator.dart';
+import 'sortie_provider.dart';
 import 'stock_provider.dart';
 
 class AdminPage extends StatelessWidget {
@@ -396,6 +398,13 @@ class _PeopleTab extends StatelessWidget {
                       onPressed: () => _showEditPersonDialog(context, person),
                     ),
                     IconButton(
+                      icon: const Icon(
+                        Icons.picture_as_pdf,
+                        color: Colors.purple,
+                      ),
+                      onPressed: () => _showReportDialog(context, person),
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
                         showDialog(
@@ -553,6 +562,49 @@ class _PeopleTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context, Person person) async {
+    final dateRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'Select a date range for the report',
+    );
+
+    if (dateRange == null) return; // User cancelled
+
+    // Use context to get providers
+    final sortieProvider = Provider.of<SortieProvider>(context, listen: false);
+    final stockProvider = Provider.of<StockProvider>(context, listen: false);
+    final peopleProvider = Provider.of<PeopleProvider>(context, listen: false);
+
+    final personSorties = sortieProvider.sorties.where((sortie) {
+      final isResponsible = sortie.responsibleId == person.id;
+      final isInDateRange =
+          !sortie.departureDate.isBefore(dateRange.start) &&
+          !sortie.departureDate.isAfter(dateRange.end);
+      return isResponsible && isInDateRange;
+    }).toList();
+
+    if (personSorties.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No sorties found for ${person.name} in this period.'),
+        ),
+      );
+      return;
+    }
+
+    // Call the new PDF generation function
+    await generateMultiSortieReportPdf(
+      person: person,
+      sorties: personSorties,
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+      allProducts: stockProvider.products,
+      allPeople: peopleProvider.people,
     );
   }
 }

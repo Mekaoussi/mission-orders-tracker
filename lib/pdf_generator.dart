@@ -8,6 +8,94 @@ import 'package:pdf/widgets.dart' as pw;
 
 import 'models.dart';
 
+Future<void> generateMultiSortieReportPdf({
+  required Person person,
+  required List<Sortie> sorties,
+  required DateTime startDate,
+  required DateTime endDate,
+  required List<Product> allProducts,
+  required List<Person> allPeople,
+}) async {
+  final pdf = pw.Document();
+  final dateFormat = DateFormat('dd/MM/yyyy');
+
+  // Load logo
+  pw.MemoryImage? image;
+  try {
+    final imageBytes = await rootBundle.load('assets/icons/logo.png');
+    image = pw.MemoryImage(imageBytes.buffer.asUint8List());
+  } catch (e) {
+    // Ignore if logo is missing
+  }
+
+  // --- Cover Page ---
+  pdf.addPage(
+    pw.Page(
+      build: (pw.Context context) {
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                if (image != null)
+                  pw.SizedBox(width: 120, height: 80, child: pw.Image(image)),
+                pw.SizedBox(width: 20),
+                pw.Text(
+                  "Rapport d'Activité Individuel",
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            pw.Divider(height: 40, thickness: 2),
+            pw.Text(
+              "Rapport pour: ${person.name}",
+              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text(
+              "Rôle: ${person.role}",
+              style: const pw.TextStyle(fontSize: 16),
+            ),
+            pw.Divider(height: 30),
+            pw.Text(
+              "Période: ${dateFormat.format(startDate)} au ${dateFormat.format(endDate)}",
+              style: const pw.TextStyle(fontSize: 16),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text(
+              "Nombre total de sorties (comme responsable): ${sorties.length}",
+              style: const pw.TextStyle(fontSize: 16),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+
+  // --- Pages for each Sortie ---
+  for (final sortie in sorties) {
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(20),
+        build: (pw.Context context) => [
+          _buildSortiePage(sortie, allProducts, allPeople, image, dateFormat),
+        ],
+      ),
+    );
+  }
+
+  final output = await getApplicationDocumentsDirectory();
+  final fileName = "Rapport_${person.name.replaceAll(' ', '_')}.pdf";
+  final file = File('${output.path}/$fileName');
+  await file.writeAsBytes(await pdf.save());
+  await OpenFile.open(file.path);
+}
+
 Future<void> generateSortiePdf(
   Sortie sortie,
   List<Product> products,
@@ -49,21 +137,7 @@ Future<void> generateSortiePdf(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(20),
       build: (pw.Context context) {
-        return [
-          _buildHeader(
-            image: image,
-            title: "BON DE SORTIE / RETOUR",
-            sortie: sortie,
-            guideName: getPersonName(sortie.guideId),
-            cuisinierName: getPersonName(sortie.cuisinierId),
-            responsibleName: getPersonName(sortie.responsibleId),
-            dateFormat: dateFormat,
-          ),
-          pw.SizedBox(height: 20),
-          _buildItemsTable(sortie, products),
-          pw.SizedBox(height: 20),
-          _buildSignatures(),
-        ];
+        return [_buildSortiePage(sortie, products, people, image, dateFormat)];
       },
     ),
   );
@@ -73,6 +147,41 @@ Future<void> generateSortiePdf(
   final file = File('${output.path}/$fileName');
   await file.writeAsBytes(await pdf.save());
   await OpenFile.open(file.path);
+}
+
+pw.Widget _buildSortiePage(
+  Sortie sortie,
+  List<Product> products,
+  List<Person> people,
+  pw.MemoryImage? image,
+  DateFormat dateFormat,
+) {
+  String getPersonName(String? id) {
+    if (id == null || id.isEmpty) return 'N/A';
+    try {
+      return people.firstWhere((p) => p.id == id).name;
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  return pw.Column(
+    children: [
+      _buildHeader(
+        image: image,
+        title: "BON DE SORTIE / RETOUR",
+        sortie: sortie,
+        guideName: getPersonName(sortie.guideId),
+        cuisinierName: getPersonName(sortie.cuisinierId),
+        responsibleName: getPersonName(sortie.responsibleId),
+        dateFormat: dateFormat,
+      ),
+      pw.SizedBox(height: 20),
+      _buildItemsTable(sortie, products),
+      pw.SizedBox(height: 20),
+      _buildSignatures(),
+    ],
+  );
 }
 
 pw.Widget _buildHeader({
