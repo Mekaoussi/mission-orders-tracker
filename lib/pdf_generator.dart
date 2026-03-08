@@ -76,18 +76,35 @@ Future<void> generateMultiSortieReportPdf({
     ),
   );
 
-  // --- Pages for each Sortie ---
-  for (final sortie in sorties) {
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(20),
-        build: (pw.Context context) => [
-          _buildSortiePage(sortie, allProducts, allPeople, image, dateFormat),
-        ],
-      ),
-    );
-  }
+  // --- Continuous Pages for Sorties ---
+  pdf.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(20),
+      build: (pw.Context context) {
+        final List<pw.Widget> content = [];
+        for (int i = 0; i < sorties.length; i++) {
+          content.add(
+            _buildSortiePage(
+              sorties[i],
+              allProducts,
+              allPeople,
+              image,
+              dateFormat,
+              includeSignatures: false,
+            ),
+          );
+
+          if (i < sorties.length - 1) {
+            content.add(pw.SizedBox(height: 10));
+            content.add(pw.Divider(color: PdfColors.grey));
+            content.add(pw.SizedBox(height: 10));
+          }
+        }
+        return content;
+      },
+    ),
+  );
 
   final output = await getApplicationDocumentsDirectory();
   final fileName = "Rapport_${person.name.replaceAll(' ', '_')}.pdf";
@@ -154,8 +171,9 @@ pw.Widget _buildSortiePage(
   List<Product> products,
   List<Person> people,
   pw.MemoryImage? image,
-  DateFormat dateFormat,
-) {
+  DateFormat dateFormat, {
+  bool includeSignatures = true,
+}) {
   String getPersonName(String? id) {
     if (id == null || id.isEmpty) return 'N/A';
     try {
@@ -178,8 +196,7 @@ pw.Widget _buildSortiePage(
       ),
       pw.SizedBox(height: 20),
       _buildItemsTable(sortie, products),
-      pw.SizedBox(height: 20),
-      _buildSignatures(),
+      if (includeSignatures) ...[pw.SizedBox(height: 20), _buildSignatures()],
     ],
   );
 }
