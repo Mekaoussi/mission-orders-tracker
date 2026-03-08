@@ -755,7 +755,9 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
   Widget build(BuildContext context) {
     final stockProvider = Provider.of<StockProvider>(context, listen: false);
     final peopleProvider = Provider.of<PeopleProvider>(context, listen: false);
-    final isReadOnly = widget.sortie.status == 'completed';
+    final isReadOnly =
+        widget.sortie.status == 'completed' ||
+        widget.sortie.status == 'cancelled';
 
     String getPersonName(String? id) {
       if (id == null || id.isEmpty) return 'N/A';
@@ -904,7 +906,8 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                 );
 
                 final missing = item.quantityTaken - item.quantityReturned;
-                final hasDeficit = missing > 0;
+                final hasDeficit =
+                    missing > 0 && widget.sortie.status != 'cancelled';
 
                 return Card(
                   margin: const EdgeInsets.all(8),
