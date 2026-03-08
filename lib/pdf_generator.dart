@@ -182,7 +182,7 @@ pw.Widget _buildSortiePage(
     try {
       return people.firstWhere((p) => p.id == id).name;
     } catch (e) {
-      return 'Unknown';
+      return 'Inconnu';
     }
   }
 

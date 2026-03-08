@@ -298,6 +298,19 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
   // Product Selection State
   String _selectedCategory = 'equipment';
 
+  String _translateCategory(String category) {
+    switch (category) {
+      case 'equipment':
+        return 'Équipement';
+      case 'secs':
+        return 'Secs';
+      case 'frais':
+        return 'Frais';
+      default:
+        return 'Tous';
+    }
+  }
+
   // Helper for date picking
   Future<void> _selectDate(BuildContext context, bool isDeparture) async {
     final DateTime? picked = await showDatePicker(
@@ -472,7 +485,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                           ),
                           child: Text(
                             _departureDate == null
-                                ? 'Select Date'
+                                ? 'Sélectionner une date'
                                 : '${_departureDate!.day}/${_departureDate!.month}/${_departureDate!.year}',
                           ),
                         ),
@@ -489,7 +502,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                           ),
                           child: Text(
                             _returnDate == null
-                                ? 'Select Date'
+                                ? 'Sélectionner une date'
                                 : '${_returnDate!.day}/${_returnDate!.month}/${_returnDate!.year}',
                           ),
                         ),
@@ -518,7 +531,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                       .map(
                         (c) => DropdownMenuItem(
                           value: c,
-                          child: Text(c.toUpperCase()),
+                          child: Text(_translateCategory(c)),
                         ),
                       )
                       .toList(),
@@ -764,7 +777,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
       try {
         return peopleProvider.people.firstWhere((p) => p.id == id).name;
       } catch (e) {
-        return 'Unknown Person';
+        return 'Personne Inconnue';
       }
     }
 
@@ -798,12 +811,12 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.flag),
-                title: const Text('Status'),
+                title: const Text('Statut'),
                 subtitle: Text(widget.sortie.status.toUpperCase()),
               ),
               ListTile(
                 leading: const Icon(Icons.account_circle),
-                title: const Text('Responsible'),
+                title: const Text('Responsable'),
                 subtitle: Text(getPersonName(widget.sortie.responsibleId)),
               ),
               ListTile(
@@ -898,7 +911,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                   (p) => p.id == item.productId,
                   orElse: () => Product(
                     id: '',
-                    name: 'Unknown',
+                    name: 'Inconnu',
                     type: '',
                     initialQuantity: 0,
                     currentQuantity: 0,
@@ -935,7 +948,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                                       .toString(),
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
-                                    labelText: 'Returned',
+                                    labelText: 'Retourné',
                                     border: OutlineInputBorder(),
                                   ),
                                   onChanged: (val) {
@@ -947,7 +960,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                                 ),
                               )
                             else
-                              Text('Returned: ${item.quantityReturned}'),
+                              Text('Retourné: ${item.quantityReturned}'),
                           ],
                         ),
                         if (hasDeficit) ...[

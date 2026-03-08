@@ -128,7 +128,7 @@ class SortieProvider extends ChangeNotifier {
       if (missing > 0 && !originalItem.isExcused) {
         scorePenalty += missing; // -1 point per missing item
         incidentNotes.add(
-          "${DateTime.now().toString().split(' ')[0]}: Missing $missing x (Prod ID: ${originalItem.productId}). Note: ${originalItem.note ?? 'No details'}",
+          "${DateTime.now().toString().split(' ')[0]}: Manquant $missing x (ID Prod: ${originalItem.productId}). Note: ${originalItem.note ?? 'Aucun détail'}",
         );
       }
     }

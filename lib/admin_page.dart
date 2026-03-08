@@ -29,7 +29,7 @@ class AdminPage extends StatelessWidget {
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Products'),
+              Tab(text: 'Produits'),
               Tab(text: 'Guides'),
               Tab(text: 'Cuisiniers'),
             ],
@@ -260,8 +260,8 @@ class _ProductsTabState extends State<_ProductsTab> {
                         ),
                         keyboardType: TextInputType.number,
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Required';
-                          if (int.tryParse(v) == null) return 'Invalid number';
+                          if (v == null || v.isEmpty) return 'Requis';
+                          if (int.tryParse(v) == null) return 'Nombre invalide';
                           return null;
                         },
                       ),
@@ -346,8 +346,8 @@ class _ProductsTabState extends State<_ProductsTab> {
                         ),
                         keyboardType: TextInputType.number,
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Required';
-                          if (int.tryParse(v) == null) return 'Invalid number';
+                          if (v == null || v.isEmpty) return 'Requis';
+                          if (int.tryParse(v) == null) return 'Nombre invalide';
                           return null;
                         },
                       ),
@@ -550,7 +550,7 @@ class _PeopleTab extends StatelessWidget {
                 decoration: const InputDecoration(labelText: 'Score'),
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
+                  if (v == null || v.isEmpty) return 'Requis';
                   if (int.tryParse(v) == null) return 'Nombre invalide';
                   return null;
                 },
