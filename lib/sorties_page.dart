@@ -498,9 +498,15 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                     }
                     final isAdded = cartItem != null;
 
+                    final displayedStock = isAdded
+                        ? product.currentQuantity - cartItem.quantityTaken
+                        : product.currentQuantity;
+
                     return ListTile(
                       title: Text(product.name),
-                      subtitle: Text('En Stock: ${product.currentQuantity}'),
+                      subtitle: Text(
+                        'En Stock: $displayedStock / ${product.initialQuantity}',
+                      ),
                       trailing: isAdded
                           ? TextButton.icon(
                               icon: const Icon(Icons.edit),
