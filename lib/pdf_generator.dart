@@ -1,38 +1,26 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'models.dart';
 
-/// Creates a user-accessible directory for reports and returns the path to a specific subfolder.
-///
-/// On Android, this tries to use external storage (Android/data/package/files)
-/// so files are visible in file managers.
-Future<String> _getReportPath(String subfolder) async {
-  Directory? directory;
-  try {
-    if (Platform.isAndroid) {
-      directory = await getExternalStorageDirectory();
-    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      directory = await getDownloadsDirectory();
-    }
-  } catch (e) {
-    // Fallback to documents if specific directories fail
-  }
+/// Saves the PDF to a temporary file and shares it.
+/// This allows the user to "Save to Files", "Print", or share via apps.
+Future<void> _saveAndSharePdf(Uint8List pdfBytes, String fileName) async {
+  final directory = await getTemporaryDirectory();
+  final file = File('${directory.path}/$fileName');
+  await file.writeAsBytes(pdfBytes);
 
-  directory ??= await getApplicationDocumentsDirectory();
-
-  final reportPath =
-      '${directory.path}${Platform.pathSeparator}Gestion_Stock${Platform.pathSeparator}$subfolder';
-  final reportDir = Directory(reportPath);
-  if (!await reportDir.exists()) {
-    await reportDir.create(recursive: true);
-  }
-  return reportPath;
+  await Share.shareXFiles(
+    [XFile(file.path)],
+    text: 'Voici le rapport PDF : $fileName',
+    subject: fileName,
+  );
 }
 
 Future<void> generateMultiSortieReportPdf({
@@ -136,11 +124,9 @@ Future<void> generateMultiSortieReportPdf({
     ),
   );
 
-  final reportPath = await _getReportPath('Rapports_Personnel');
   final fileName = "Rapport_${person.name.replaceAll(' ', '_')}.pdf";
-  final file = File('$reportPath${Platform.pathSeparator}$fileName');
-  await file.writeAsBytes(await pdf.save());
-  await OpenFile.open(file.path);
+  final pdfBytes = await pdf.save();
+  await _saveAndSharePdf(pdfBytes, fileName);
 }
 
 Future<void> generateSortiePdf(
@@ -189,11 +175,9 @@ Future<void> generateSortiePdf(
     ),
   );
 
-  final reportPath = await _getReportPath('Bons_Sortie');
   final fileName = "Sortie_${sortie.displayId}.pdf";
-  final file = File('$reportPath${Platform.pathSeparator}$fileName');
-  await file.writeAsBytes(await pdf.save());
-  await OpenFile.open(file.path);
+  final pdfBytes = await pdf.save();
+  await _saveAndSharePdf(pdfBytes, fileName);
 }
 
 pw.Widget _buildSortiePage(

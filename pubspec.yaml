@@ -41,8 +41,8 @@ dependencies:
 
   # PDF generation (to be added later)
   pdf: ^3.10.4
-  open_file: ^3.3.2
   intl: 0.20.2
+  share_plus: ^7.2.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

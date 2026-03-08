@@ -707,13 +707,21 @@ class _PeopleTab extends StatelessWidget {
     }
 
     // Call the new PDF generation function
-    await generateMultiSortieReportPdf(
-      person: person,
-      sorties: personSorties,
-      startDate: startDate,
-      endDate: endDate,
-      allProducts: stockProvider.products,
-      allPeople: peopleProvider.people,
-    );
+    try {
+      await generateMultiSortieReportPdf(
+        person: person,
+        sorties: personSorties,
+        startDate: startDate,
+        endDate: endDate,
+        allProducts: stockProvider.products,
+        allPeople: peopleProvider.people,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la sauvegarde du PDF: ${e.toString()}'),
+        ),
+      );
+    }
   }
 }

@@ -798,12 +798,22 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             tooltip: 'Générer le PDF',
-            onPressed: () {
-              generateSortiePdf(
-                widget.sortie,
-                stockProvider.products,
-                peopleProvider.people,
-              );
+            onPressed: () async {
+              try {
+                await generateSortiePdf(
+                  widget.sortie,
+                  stockProvider.products,
+                  peopleProvider.people,
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Erreur lors de la sauvegarde du PDF: ${e.toString()}',
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ],
