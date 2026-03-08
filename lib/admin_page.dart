@@ -393,6 +393,21 @@ class _PeopleTab extends StatelessWidget {
   final String role;
   const _PeopleTab({required this.role});
 
+  Color _getScoreColor(int score) {
+    if (score == 0) {
+      return Colors.green;
+    } else if (score > -5) {
+      // from -1 to -4
+      return Colors.orange.shade400;
+    } else if (score > -10) {
+      // from -5 to -9
+      return Colors.orange.shade700;
+    } else {
+      // -10 and below
+      return Colors.red.shade700;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -409,8 +424,20 @@ class _PeopleTab extends StatelessWidget {
             itemBuilder: (context, index) {
               final person = people[index];
               return ListTile(
-                title: Text(person.name),
-                subtitle: Text('Score : ${person.score} | ${person.phone}'),
+                title: Row(
+                  children: [
+                    Text(person.name),
+                    const SizedBox(width: 12),
+                    Text(
+                      '(${person.score})',
+                      style: TextStyle(
+                        color: _getScoreColor(person.score),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: Text(person.phone),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
