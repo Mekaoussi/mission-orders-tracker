@@ -16,6 +16,9 @@ Future<void> generateMultiSortieReportPdf({
   required List<Product> allProducts,
   required List<Person> allPeople,
 }) async {
+  // Sort sorties by departure date ascending (Oldest first)
+  sorties.sort((a, b) => a.departureDate.compareTo(b.departureDate));
+
   final pdf = pw.Document();
   final dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -240,12 +243,28 @@ pw.Widget _buildHeader({
             padding: const pw.EdgeInsets.all(8.0),
             child: pw.Column(
               children: [
-                pw.Text(
-                  title,
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  children: [
+                    pw.Text(
+                      title,
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(width: 8),
+                    pw.Text(
+                      sortie.status == 'completed' ? "(COMPLÉTÉ)" : "(ACTIF)",
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                        color: sortie.status == 'completed'
+                            ? PdfColors.green
+                            : PdfColors.orange,
+                      ),
+                    ),
+                  ],
                 ),
                 pw.SizedBox(height: 10),
                 pw.Row(
