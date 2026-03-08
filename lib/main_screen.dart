@@ -36,11 +36,11 @@ class _MainScreenState extends State<MainScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(Icons.inventory_2, color: Colors.white, size: 48),
+                  Icon(Icons.inventory_2, color: Colors.white, size: 40),
                   SizedBox(height: 10),
                   Text(
                     'Gestionnaire de Stock',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
+                    style: TextStyle(color: Colors.white, fontSize: 28),
                   ),
                 ],
               ),
@@ -64,6 +64,7 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
+        iconSize: 32,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Stock'),
           BottomNavigationBarItem(

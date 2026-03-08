@@ -79,7 +79,7 @@ class DashboardPage extends StatelessWidget {
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         trailing: Text(
           value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
       ),
     );

@@ -953,7 +953,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                         Text(
                           product.name,
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

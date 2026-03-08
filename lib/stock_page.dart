@@ -132,12 +132,12 @@ class _StockPageState extends State<StockPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 64, color: color),
+              Icon(icon, size: 80, color: color),
               const SizedBox(height: 16),
               Text(
                 title.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),

@@ -59,7 +59,17 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final textTheme = GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme);
+    final baseTextTheme = GoogleFonts.poppinsTextTheme(
+      Theme.of(context).textTheme,
+    );
+    final textTheme = baseTextTheme.copyWith(
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 16),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 18),
+      titleMedium: baseTextTheme.titleMedium?.copyWith(fontSize: 20),
+      titleLarge: baseTextTheme.titleLarge?.copyWith(fontSize: 24),
+      labelLarge: baseTextTheme.labelLarge?.copyWith(fontSize: 18),
+    );
+
     const primaryColor = Color(0xFF005A8D);
     const secondaryColor = Color(0xFF00A99D);
 
@@ -78,20 +88,24 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
         textTheme: textTheme,
+        iconTheme: const IconThemeData(size: 28),
         appBarTheme: AppBarTheme(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 2,
           centerTitle: true,
-          titleTextStyle: textTheme.titleLarge?.copyWith(color: Colors.white),
-          iconTheme: const IconThemeData(color: Colors.white),
+          titleTextStyle: textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontSize: 26,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white, size: 32),
         ),
         cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -100,23 +114,47 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: secondaryColor,
           foregroundColor: Colors.white,
+          iconSize: 32,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           selectedItemColor: primaryColor,
           unselectedItemColor: Colors.grey,
+          selectedLabelStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: TextStyle(fontSize: 14),
         ),
         dialogTheme: DialogThemeData(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+          titleTextStyle: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+          contentTextStyle: const TextStyle(
+            fontSize: 18,
+            color: Colors.black87,
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 20,
+          ),
+          labelStyle: const TextStyle(fontSize: 18),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.grey),
@@ -124,6 +162,20 @@ class MyApp extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: primaryColor, width: 2),
+          ),
+        ),
+        listTileTheme: ListTileThemeData(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 12,
+          ),
+          iconColor: primaryColor,
+          titleTextStyle: textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+          subtitleTextStyle: textTheme.bodyMedium?.copyWith(
+            color: Colors.black54,
           ),
         ),
       ),
