@@ -60,7 +60,7 @@ Future<void> generateSortiePdf(
             dateFormat: dateFormat,
           ),
           pw.SizedBox(height: 20),
-          _buildItemsTable(sortie, getProductName),
+          _buildItemsTable(sortie, products),
           pw.SizedBox(height: 20),
           _buildSignatures(),
         ];
@@ -169,12 +169,35 @@ pw.Widget _buildInfoColumn(String label, String value) {
   );
 }
 
-pw.Widget _buildItemsTable(
-  Sortie sortie,
-  String Function(String) getProductName,
-) {
+pw.Widget _buildItemsTable(Sortie sortie, List<Product> allProducts) {
   final isCompleted = sortie.status == 'completed';
 
+  // Helper to get a product by its ID
+  Product? getProductById(String productId) {
+    try {
+      return allProducts.firstWhere((p) => p.id == productId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Group items by category
+  final Map<String, List<SortieItem>> groupedItems = {
+    'equipment': [],
+    'secs': [],
+    'frais': [],
+  };
+
+  for (final item in sortie.items) {
+    final product = getProductById(item.productId);
+    if (product != null) {
+      groupedItems[product.type]?.add(item);
+    }
+  }
+
+  final List<pw.TableRow> tableRows = [];
+
+  // Add header row
   final headers = [
     'Produit',
     'Qté Prise',
@@ -182,34 +205,120 @@ pw.Widget _buildItemsTable(
     if (isCompleted) 'Manquant',
     'Note',
   ];
+  tableRows.add(
+    pw.TableRow(
+      decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+      children: headers
+          .map(
+            (header) => pw.Container(
+              padding: const pw.EdgeInsets.all(4),
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Text(
+                header,
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    ),
+  );
 
-  final data = sortie.items.map((item) {
-    final missing = item.quantityTaken - item.quantityReturned;
-    return [
-      getProductName(item.productId),
-      item.quantityTaken.toString(),
-      if (isCompleted) item.quantityReturned.toString(),
-      if (isCompleted) (missing > 0 ? missing.toString() : '-'),
-      item.note ?? '',
-    ];
-  }).toList();
+  // Add items grouped by category
+  for (final category in groupedItems.keys) {
+    final itemsInCategory = groupedItems[category]!;
+    if (itemsInCategory.isNotEmpty) {
+      // Add category header row
+      tableRows.add(
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          children: [
+            pw.Container(
+              padding: const pw.EdgeInsets.all(4),
+              child: pw.Text(
+                category.toUpperCase(),
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            // Fill remaining columns to match header count, creating a visual span
+            ...List.generate(headers.length - 1, (index) => pw.Container()),
+          ],
+        ),
+      );
 
-  return pw.Table.fromTextArray(
-    headers: headers,
-    data: data,
-    border: pw.TableBorder.all(),
-    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-    headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-    cellStyle: const pw.TextStyle(fontSize: 10),
-    cellAlignment: pw.Alignment.centerLeft,
-    headerAlignment: pw.Alignment.centerLeft,
-    columnWidths: {
-      0: const pw.FlexColumnWidth(3), // Product Name
+      // Add item rows for this category
+      for (final item in itemsInCategory) {
+        final product = getProductById(item.productId);
+        final missing = item.quantityTaken - item.quantityReturned;
+
+        final rowData = [
+          pw.Text(
+            product?.name ?? 'Unknown',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+          pw.Text(
+            item.quantityTaken.toString(),
+            style: const pw.TextStyle(fontSize: 10),
+            textAlign: pw.TextAlign.center,
+          ),
+          if (isCompleted)
+            pw.Text(
+              item.quantityReturned.toString(),
+              style: const pw.TextStyle(fontSize: 10),
+              textAlign: pw.TextAlign.center,
+            ),
+          if (isCompleted)
+            pw.Text(
+              missing > 0 ? missing.toString() : '-',
+              style: const pw.TextStyle(fontSize: 10),
+              textAlign: pw.TextAlign.center,
+            ),
+          pw.Text(item.note ?? '', style: const pw.TextStyle(fontSize: 10)),
+        ];
+
+        tableRows.add(
+          pw.TableRow(
+            children: rowData
+                .map(
+                  (widget) => pw.Container(
+                    padding: const pw.EdgeInsets.all(4),
+                    alignment: pw.Alignment.centerLeft,
+                    child: widget,
+                  ),
+                )
+                .toList(),
+          ),
+        );
+      }
+    }
+  }
+
+  final Map<int, pw.TableColumnWidth> columnWidths;
+  if (isCompleted) {
+    columnWidths = {
+      0: const pw.FlexColumnWidth(2), // Product Name
+      1: const pw.FlexColumnWidth(0.8), // Taken
+      2: const pw.FlexColumnWidth(0.8), // Returned
+      3: const pw.FlexColumnWidth(0.8), // Missing
+      4: const pw.FlexColumnWidth(3.6), // Note
+    };
+  } else {
+    columnWidths = {
+      0: const pw.FlexColumnWidth(2.5), // Product Name
       1: const pw.FlexColumnWidth(1), // Taken
-      if (isCompleted) 2: const pw.FlexColumnWidth(1), // Returned
-      if (isCompleted) 3: const pw.FlexColumnWidth(1), // Missing
-      4: const pw.FlexColumnWidth(2), // Note
-    },
+      2: const pw.FlexColumnWidth(4.5), // Note
+    };
+  }
+
+  return pw.Table(
+    border: pw.TableBorder.all(),
+    columnWidths: columnWidths,
+    children: tableRows,
   );
 }
 
