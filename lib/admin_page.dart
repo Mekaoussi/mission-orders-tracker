@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 
 import 'constants.dart';
 import 'models.dart';
@@ -582,20 +583,105 @@ class _PeopleTab extends StatelessWidget {
     );
   }
 
-  void _showReportDialog(
+  void _showReportDialog(BuildContext context, Person person, String role) {
+    DateTime? startDate;
+    DateTime? endDate;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Sélectionner la période'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: const Text('Date de début'),
+                    subtitle: Text(
+                      startDate == null
+                          ? 'jj/mm/aaaa'
+                          : DateFormat('dd/MM/yyyy').format(startDate!),
+                    ),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: startDate ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setState(() => startDate = picked);
+                      }
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Date de fin'),
+                    subtitle: Text(
+                      endDate == null
+                          ? 'jj/mm/aaaa'
+                          : DateFormat('dd/MM/yyyy').format(endDate!),
+                    ),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: endDate ?? DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setState(() => endDate = picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: (startDate != null && endDate != null)
+                      ? () {
+                          if (startDate!.isAfter(endDate!)) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'La date de début doit être avant la date de fin.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          Navigator.pop(dialogContext);
+                          _generateReport(
+                            context,
+                            person,
+                            startDate!,
+                            endDate!,
+                          );
+                        }
+                      : null,
+                  child: const Text('Générer'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _generateReport(
     BuildContext context,
     Person person,
-    String role,
+    DateTime startDate,
+    DateTime endDate,
   ) async {
-    final dateRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'Sélectionnez une période pour le rapport',
-    );
-
-    if (dateRange == null) return; // User cancelled
-
     // Use context to get providers
     final sortieProvider = Provider.of<SortieProvider>(context, listen: false);
     final stockProvider = Provider.of<StockProvider>(context, listen: false);
@@ -604,8 +690,8 @@ class _PeopleTab extends StatelessWidget {
     final personSorties = sortieProvider.sorties.where((sortie) {
       final isResponsible = sortie.responsibleId == person.id;
       final isInDateRange =
-          !sortie.departureDate.isBefore(dateRange.start) &&
-          !sortie.departureDate.isAfter(dateRange.end);
+          !sortie.departureDate.isBefore(startDate) &&
+          !sortie.departureDate.isAfter(endDate);
       return isResponsible && isInDateRange;
     }).toList();
 
@@ -624,8 +710,8 @@ class _PeopleTab extends StatelessWidget {
     await generateMultiSortieReportPdf(
       person: person,
       sorties: personSorties,
-      startDate: dateRange.start,
-      endDate: dateRange.end,
+      startDate: startDate,
+      endDate: endDate,
       allProducts: stockProvider.products,
       allPeople: peopleProvider.people,
     );
