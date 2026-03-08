@@ -18,11 +18,11 @@ class AdminPage extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin Panel'),
+          title: const Text("Panneau d'Administration"),
           actions: [
             IconButton(
               icon: const Icon(Icons.delete_forever, color: Colors.red),
-              tooltip: 'Reset Database',
+              tooltip: 'Réinitialiser la base de données',
               onPressed: () => _showResetDatabaseDialog(context),
             ),
           ],
@@ -49,14 +49,14 @@ class AdminPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset Entire Database?'),
+        title: const Text('Réinitialiser toute la base de données ?'),
         content: const Text(
-          'This will delete ALL data (products, people, sorties) and cannot be undone. The app will need to be restarted after this action.',
+          "Ceci supprimera TOUTES les données (produits, personnel, sorties) et ne peut être annulé. L'application devra être redémarrée après cette action.",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: const Text('Annuler'),
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -74,13 +74,13 @@ class AdminPage extends StatelessWidget {
                 const SnackBar(
                   backgroundColor: Colors.red,
                   content: Text(
-                    'Database deleted. Please RESTART the app now.',
+                    "Base de données supprimée. Veuillez REDÉMARRER l'application maintenant.",
                   ),
                   duration: Duration(seconds: 6),
                 ),
               );
             },
-            child: const Text('DELETE EVERYTHING'),
+            child: const Text('TOUT SUPPRIMER'),
           ),
         ],
       ),
@@ -108,16 +108,14 @@ class _ProductsTabState extends State<_ProductsTab> {
             child: DropdownButtonFormField<String>(
               value: _selectedCategory,
               decoration: const InputDecoration(
-                labelText: 'Filter by Category',
+                labelText: 'Filtrer par Catégorie',
                 border: OutlineInputBorder(),
               ),
               items: ['All', 'equipment', 'secs', 'frais']
                   .map(
                     (category) => DropdownMenuItem(
                       value: category,
-                      child: Text(
-                        category[0].toUpperCase() + category.substring(1),
-                      ),
+                      child: Text(_translateCategory(category)),
                     ),
                   )
                   .toList(),
@@ -141,7 +139,7 @@ class _ProductsTabState extends State<_ProductsTab> {
 
                 if (filteredProducts.isEmpty) {
                   return const Center(
-                    child: Text('No products in this category.'),
+                    child: Text('Aucun produit dans cette catégorie.'),
                   );
                 }
                 return ListView.builder(
@@ -151,7 +149,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                     return ListTile(
                       title: Text(product.name),
                       subtitle: Text(
-                        '${product.type} | Init: ${product.initialQuantity}',
+                        '${_translateCategory(product.type)} | Init: ${product.initialQuantity}',
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -167,19 +165,19 @@ class _ProductsTabState extends State<_ProductsTab> {
                               showDialog(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Product'),
-                                  content: Text('Delete ${product.name}?'),
+                                  title: const Text('Supprimer le Produit'),
+                                  content: Text('Supprimer ${product.name} ?'),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Cancel'),
+                                      child: const Text('Annuler'),
                                     ),
                                     TextButton(
                                       onPressed: () {
                                         provider.deleteProduct(product);
                                         Navigator.pop(ctx);
                                       },
-                                      child: const Text('Delete'),
+                                      child: const Text('Supprimer'),
                                     ),
                                   ],
                                 ),
@@ -203,6 +201,19 @@ class _ProductsTabState extends State<_ProductsTab> {
     );
   }
 
+  String _translateCategory(String category) {
+    switch (category) {
+      case 'equipment':
+        return 'Équipement';
+      case 'secs':
+        return 'Secs';
+      case 'frais':
+        return 'Frais';
+      default:
+        return 'Tous';
+    }
+  }
+
   void _showAddProductDialog(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
@@ -215,7 +226,7 @@ class _ProductsTabState extends State<_ProductsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Add New Product'),
+              title: const Text('Ajouter un Nouveau Produit'),
               content: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -224,24 +235,27 @@ class _ProductsTabState extends State<_ProductsTab> {
                     children: [
                       TextFormField(
                         controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Name'),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        decoration: const InputDecoration(labelText: 'Nom'),
+                        validator: (v) => v!.isEmpty ? 'Requis' : null,
                       ),
                       DropdownButtonFormField<String>(
                         value: selectedType,
                         hint: const Text('Type'),
                         items: ['equipment', 'secs', 'frais']
                             .map(
-                              (t) => DropdownMenuItem(value: t, child: Text(t)),
+                              (t) => DropdownMenuItem(
+                                value: t,
+                                child: Text(_translateCategory(t)),
+                              ),
                             )
                             .toList(),
                         onChanged: (v) => setState(() => selectedType = v),
-                        validator: (v) => v == null ? 'Required' : null,
+                        validator: (v) => v == null ? 'Requis' : null,
                       ),
                       TextFormField(
                         controller: quantityController,
                         decoration: const InputDecoration(
-                          labelText: 'Initial Qty',
+                          labelText: 'Qté Initiale',
                         ),
                         keyboardType: TextInputType.number,
                         validator: (v) {
@@ -257,7 +271,7 @@ class _ProductsTabState extends State<_ProductsTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+                  child: const Text('Annuler'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -276,7 +290,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                       Navigator.pop(dialogContext);
                     }
                   },
-                  child: const Text('Add'),
+                  child: const Text('Ajouter'),
                 ),
               ],
             );
@@ -300,7 +314,7 @@ class _ProductsTabState extends State<_ProductsTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Edit ${product.name}'),
+              title: Text('Modifier ${product.name}'),
               content: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -309,14 +323,17 @@ class _ProductsTabState extends State<_ProductsTab> {
                     children: [
                       TextFormField(
                         controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Name'),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                        decoration: const InputDecoration(labelText: 'Nom'),
+                        validator: (v) => v!.isEmpty ? 'Requis' : null,
                       ),
                       DropdownButtonFormField<String>(
                         value: selectedType,
                         items: ['equipment', 'secs', 'frais']
                             .map(
-                              (t) => DropdownMenuItem(value: t, child: Text(t)),
+                              (t) => DropdownMenuItem(
+                                value: t,
+                                child: Text(_translateCategory(t)),
+                              ),
                             )
                             .toList(),
                         onChanged: (v) => setState(() => selectedType = v),
@@ -324,7 +341,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                       TextFormField(
                         controller: quantityController,
                         decoration: const InputDecoration(
-                          labelText: 'Initial Qty',
+                          labelText: 'Qté Initiale',
                         ),
                         keyboardType: TextInputType.number,
                         validator: (v) {
@@ -340,7 +357,7 @@ class _ProductsTabState extends State<_ProductsTab> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+                  child: const Text('Annuler'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -357,7 +374,7 @@ class _ProductsTabState extends State<_ProductsTab> {
                       Navigator.pop(dialogContext);
                     }
                   },
-                  child: const Text('Save'),
+                  child: const Text('Enregistrer'),
                 ),
               ],
             );
@@ -380,7 +397,7 @@ class _PeopleTab extends StatelessWidget {
           final people = provider.people.where((p) => p.role == role).toList();
 
           if (people.isEmpty) {
-            return Center(child: Text('No $role found.'));
+            return Center(child: Text('Aucun $role trouvé.'));
           }
 
           return ListView.builder(
@@ -389,7 +406,7 @@ class _PeopleTab extends StatelessWidget {
               final person = people[index];
               return ListTile(
                 title: Text(person.name),
-                subtitle: Text('Score: ${person.score} | ${person.phone}'),
+                subtitle: Text('Score : ${person.score} | ${person.phone}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -402,7 +419,7 @@ class _PeopleTab extends StatelessWidget {
                         Icons.picture_as_pdf,
                         color: Colors.purple,
                       ),
-                      onPressed: () => _showReportDialog(context, person),
+                      onPressed: () => _showReportDialog(context, person, role),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
@@ -410,19 +427,19 @@ class _PeopleTab extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: Text('Delete $role'),
-                            content: Text('Delete ${person.name}?'),
+                            title: Text('Supprimer $role'),
+                            content: Text('Supprimer ${person.name} ?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Cancel'),
+                                child: const Text('Annuler'),
                               ),
                               TextButton(
                                 onPressed: () {
                                   provider.deletePerson(person);
                                   Navigator.pop(ctx);
                                 },
-                                child: const Text('Delete'),
+                                child: const Text('Supprimer'),
                               ),
                             ],
                           ),
@@ -437,13 +454,13 @@ class _PeopleTab extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPersonDialog(context),
+        onPressed: () => _showAddPersonDialog(context, role),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showAddPersonDialog(BuildContext context) {
+  void _showAddPersonDialog(BuildContext context, String role) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
@@ -460,13 +477,13 @@ class _PeopleTab extends StatelessWidget {
               children: [
                 TextFormField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(labelText: 'Nom'),
+                  validator: (v) => v!.isEmpty ? 'Requis' : null,
                 ),
                 TextFormField(
                   controller: phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone'),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(labelText: 'Téléphone'),
+                  validator: (v) => v!.isEmpty ? 'Requis' : null,
                 ),
               ],
             ),
@@ -474,7 +491,7 @@ class _PeopleTab extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: const Text('Annuler'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -492,7 +509,7 @@ class _PeopleTab extends StatelessWidget {
                   Navigator.pop(dialogContext);
                 }
               },
-              child: const Text('Add'),
+              child: const Text('Ajouter'),
             ),
           ],
         );
@@ -511,7 +528,7 @@ class _PeopleTab extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Edit ${person.name}'),
+        title: Text('Modifier ${person.name}'),
         content: Form(
           key: formKey,
           child: Column(
@@ -519,13 +536,13 @@ class _PeopleTab extends StatelessWidget {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(labelText: 'Nom'),
+                validator: (v) => v!.isEmpty ? 'Requis' : null,
               ),
               TextFormField(
                 controller: phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(labelText: 'Téléphone'),
+                validator: (v) => v!.isEmpty ? 'Requis' : null,
               ),
               TextFormField(
                 controller: scoreController,
@@ -533,7 +550,7 @@ class _PeopleTab extends StatelessWidget {
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (int.tryParse(v) == null) return 'Invalid number';
+                  if (int.tryParse(v) == null) return 'Nombre invalide';
                   return null;
                 },
               ),
@@ -543,7 +560,7 @@ class _PeopleTab extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('Annuler'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -558,19 +575,23 @@ class _PeopleTab extends StatelessWidget {
                 Navigator.pop(dialogContext);
               }
             },
-            child: const Text('Save'),
+            child: const Text('Enregistrer'),
           ),
         ],
       ),
     );
   }
 
-  void _showReportDialog(BuildContext context, Person person) async {
+  void _showReportDialog(
+    BuildContext context,
+    Person person,
+    String role,
+  ) async {
     final dateRange = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText: 'Select a date range for the report',
+      helpText: 'Sélectionnez une période pour le rapport',
     );
 
     if (dateRange == null) return; // User cancelled
@@ -591,7 +612,9 @@ class _PeopleTab extends StatelessWidget {
     if (personSorties.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No sorties found for ${person.name} in this period.'),
+          content: Text(
+            'Aucune sortie trouvée pour ${person.name} dans cette période.',
+          ),
         ),
       );
       return;

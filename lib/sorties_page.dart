@@ -134,14 +134,14 @@ class _SortiesPageState extends State<SortiesPage> {
           actions: [
             IconButton(
               icon: const Icon(Icons.calendar_month),
-              tooltip: 'Select Month',
+              tooltip: 'Sélectionner un Mois',
               onPressed: () => _showMonthYearPicker(context),
             ),
           ],
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Active'),
-              Tab(text: 'History'),
+              Tab(text: 'Actives'),
+              Tab(text: 'Historique'),
             ],
           ),
         ),
@@ -185,7 +185,10 @@ class _SortieList extends StatelessWidget {
         }).toList();
 
         if (list.isEmpty) {
-          return Center(child: Text('No $status sorties for this month.'));
+          final statusFrench = status == 'active' ? 'actives' : 'terminées';
+          return Center(
+            child: Text('Aucune sortie $statusFrench pour ce mois.'),
+          );
         }
 
         return ListView.builder(
@@ -201,7 +204,7 @@ class _SortieList extends StatelessWidget {
               child: ListTile(
                 title: Text('Sortie ${sortie.displayId}'),
                 subtitle: Text(
-                  'Depart: ${sortie.departureDate.day}/${sortie.departureDate.month}/${sortie.departureDate.year}\nItems: ${sortie.items.length}',
+                  'Départ: ${sortie.departureDate.day}/${sortie.departureDate.month}/${sortie.departureDate.year}\nArticles: ${sortie.items.length}',
                 ),
                 trailing: hasMissing
                     ? const Icon(Icons.warning, color: Colors.red)
@@ -291,7 +294,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Sortie')),
+      appBar: AppBar(title: const Text('Nouvelle Sortie')),
       body: Column(
         children: [
           // 1. People Selection
@@ -312,7 +315,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                         showSearchBox: true,
                         searchFieldProps: const TextFieldProps(
                           decoration: InputDecoration(
-                            labelText: "Search Person",
+                            labelText: "Rechercher une personne",
                           ),
                         ),
                         itemBuilder: (context, person, isSelected) => ListTile(
@@ -324,7 +327,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                       itemAsString: (Person p) => p.name,
                       dropdownDecoratorProps: const DropDownDecoratorProps(
                         dropdownSearchDecoration: InputDecoration(
-                          labelText: "Responsible (Required)",
+                          labelText: "Responsable (Requis)",
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -332,7 +335,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                         setState(() => _selectedResponsible = person?.id);
                       },
                       validator: (p) =>
-                          p == null ? 'Responsible is required' : null,
+                          p == null ? 'Responsable est requis' : null,
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -347,7 +350,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                               showSearchBox: true,
                               searchFieldProps: const TextFieldProps(
                                 decoration: InputDecoration(
-                                  labelText: "Search Guide",
+                                  labelText: "Rechercher un guide",
                                 ),
                               ),
                             ),
@@ -375,7 +378,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                               showSearchBox: true,
                               searchFieldProps: const TextFieldProps(
                                 decoration: InputDecoration(
-                                  labelText: "Search Cuisinier",
+                                  labelText: "Rechercher un cuisinier",
                                 ),
                               ),
                             ),
@@ -414,7 +417,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                         onTap: () => _selectDate(context, true),
                         child: InputDecorator(
                           decoration: const InputDecoration(
-                            labelText: 'Departure Date',
+                            labelText: 'Date de Départ',
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
@@ -431,7 +434,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                         onTap: () => _selectDate(context, false),
                         child: InputDecorator(
                           decoration: const InputDecoration(
-                            labelText: 'Return Date',
+                            labelText: 'Date de Retour',
                             border: OutlineInputBorder(),
                           ),
                           child: Text(
@@ -455,7 +458,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
             child: Row(
               children: [
                 const Text(
-                  'Products:',
+                  'Produits :',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 10),
@@ -497,12 +500,12 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
 
                     return ListTile(
                       title: Text(product.name),
-                      subtitle: Text('In Stock: ${product.currentQuantity}'),
+                      subtitle: Text('En Stock: ${product.currentQuantity}'),
                       trailing: isAdded
                           ? TextButton.icon(
                               icon: const Icon(Icons.edit),
                               label: Text(
-                                'Taken: ${cartItem.quantityTaken}',
+                                'Pris : ${cartItem.quantityTaken}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -518,7 +521,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                                 Icons.add_circle_outline,
                                 color: Colors.green,
                               ),
-                              tooltip: 'Add to cart',
+                              tooltip: 'Ajouter au panier',
                               onPressed: () =>
                                   _showQuantityDialog(context, product),
                             ),
@@ -536,7 +539,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Items to take: ${_cart.length}'),
+                Text('Articles à prendre : ${_cart.length}'),
                 ElevatedButton(
                   onPressed:
                       _selectedResponsible == null ||
@@ -545,7 +548,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                           _returnDate == null
                       ? null
                       : _createSortie,
-                  child: const Text('CONFIRM SORTIE'),
+                  child: const Text('CONFIRMER LA SORTIE'),
                 ),
               ],
             ),
@@ -568,11 +571,13 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isEditing ? 'Edit ${product.name}' : 'Add ${product.name}'),
+        title: Text(
+          isEditing ? 'Modifier ${product.name}' : 'Ajouter ${product.name}',
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Quantity'),
+          decoration: const InputDecoration(labelText: 'Quantité'),
           autofocus: true,
         ),
         actions: [
@@ -585,12 +590,12 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                 });
                 Navigator.pop(ctx);
               },
-              child: const Text('Remove'),
+              child: const Text('Retirer'),
             ),
           const Spacer(),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: const Text('Annuler'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -598,7 +603,9 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
 
               if (qty < 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Quantity cannot be negative.')),
+                  const SnackBar(
+                    content: Text('La quantité ne peut pas être négative.'),
+                  ),
                 );
                 return;
               }
@@ -606,7 +613,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Not enough in stock. Only ${product.currentQuantity} available.',
+                      'Pas assez en stock. Seulement ${product.currentQuantity} disponible(s).',
                     ),
                   ),
                 );
@@ -630,7 +637,7 @@ class _CreateSortiePageState extends State<CreateSortiePage> {
               });
               Navigator.pop(ctx);
             },
-            child: Text(isEditing ? 'Update' : 'Add'),
+            child: Text(isEditing ? 'Mettre à jour' : 'Ajouter'),
           ),
         ],
       ),
@@ -669,7 +676,7 @@ class SortieDetailPage extends StatefulWidget {
 class _SortieDetailPageState extends State<SortieDetailPage> {
   // We keep a local copy of items to edit before saving
   late List<SortieItem> _items;
-  String _selectedCategory = 'All';
+  String _selectedCategory = 'Tous';
 
   @override
   void initState() {
@@ -709,11 +716,11 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Details: Sortie ${widget.sortie.displayId}'),
+        title: Text('Détails : Sortie ${widget.sortie.displayId}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Generate PDF',
+            tooltip: 'Générer le PDF',
             onPressed: () {
               generateSortiePdf(
                 widget.sortie,
@@ -727,7 +734,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
       body: Column(
         children: [
           ExpansionTile(
-            title: const Text('Sortie Summary'),
+            title: const Text('Résumé de la Sortie'),
             initiallyExpanded: true,
             childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
@@ -754,23 +761,23 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.today),
-                title: const Text('Creation Date'),
+                title: const Text('Date de Création'),
                 subtitle: Text(formatDate(widget.sortie.creationDate)),
               ),
               ListTile(
                 leading: const Icon(Icons.arrow_forward),
-                title: const Text('Departure Date'),
+                title: const Text('Date de Départ'),
                 subtitle: Text(formatDate(widget.sortie.departureDate)),
               ),
               ListTile(
                 leading: const Icon(Icons.arrow_back),
-                title: const Text('Return Date'),
+                title: const Text('Date de Retour'),
                 subtitle: Text(formatDate(widget.sortie.returnDate)),
               ),
               if (widget.sortie.completionDate != null)
                 ListTile(
                   leading: const Icon(Icons.check_circle_outline),
-                  title: const Text('Actual Completion Date'),
+                  title: const Text('Date de Réalisation'),
                   subtitle: Text(formatDate(widget.sortie.completionDate!)),
                 ),
             ],
@@ -782,12 +789,12 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Items Details',
+                  'Détails des Articles',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 DropdownButton<String>(
                   value: _selectedCategory,
-                  items: ['All', 'Equipment', 'Secs', 'Frais']
+                  items: ['Tous', 'Équipement', 'Secs', 'Frais']
                       .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                       .toList(),
                   onChanged: (v) {
@@ -802,26 +809,26 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
           Expanded(
             child: ListView.builder(
               itemCount: _items.where((item) {
-                if (_selectedCategory == 'All') return true;
+                if (_selectedCategory == 'Tous') return true;
                 try {
                   final product = stockProvider.products.firstWhere(
                     (p) => p.id == item.productId,
                   );
                   return product.type.toLowerCase() ==
-                      _selectedCategory.toLowerCase();
+                      _getCategoryValue(_selectedCategory).toLowerCase();
                 } catch (e) {
                   return false;
                 }
               }).length,
               itemBuilder: (context, index) {
                 final filteredItems = _items.where((item) {
-                  if (_selectedCategory == 'All') return true;
+                  if (_selectedCategory == 'Tous') return true;
                   try {
                     final product = stockProvider.products.firstWhere(
                       (p) => p.id == item.productId,
                     );
                     return product.type.toLowerCase() ==
-                        _selectedCategory.toLowerCase();
+                        _getCategoryValue(_selectedCategory).toLowerCase();
                   } catch (e) {
                     return false;
                   }
@@ -860,7 +867,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Text('Taken: ${item.quantityTaken}'),
+                            Text('Pris : ${item.quantityTaken}'),
                             const SizedBox(width: 20),
                             if (!isReadOnly)
                               Expanded(
@@ -887,7 +894,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                         if (hasDeficit) ...[
                           const SizedBox(height: 8),
                           Text(
-                            'Missing: $missing',
+                            'Manquant : $missing',
                             style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
@@ -896,7 +903,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                           if (!isReadOnly) ...[
                             CheckboxListTile(
                               title: const Text(
-                                'Excused? (Uncontrollable event)',
+                                'Excusé ? (Événement incontrôlable)',
                               ),
                               value: item.isExcused,
                               onChanged: (val) {
@@ -907,7 +914,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                             ),
                           ] else if (item.isExcused)
                             const Text(
-                              '(Excused)',
+                              '(Excusé)',
                               style: TextStyle(color: Colors.green),
                             ),
                         ],
@@ -916,13 +923,13 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                           TextFormField(
                             initialValue: item.note,
                             decoration: const InputDecoration(
-                              labelText: 'Note (Optional)',
+                              labelText: 'Note (Optionnel)',
                               icon: Icon(Icons.note),
                             ),
                             onChanged: (val) => item.note = val,
                           )
                         else if (item.note != null && item.note!.isNotEmpty)
-                          Text('Note: ${item.note}'),
+                          Text('Note : ${item.note}'),
                       ],
                     ),
                   ),
@@ -947,7 +954,7 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
                     Navigator.pop(context);
                   },
                   child: const Text(
-                    'CLOSE SORTIE (RETURN)',
+                    'CLÔTURER LA SORTIE (RETOUR)',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -956,5 +963,18 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
         ],
       ),
     );
+  }
+
+  String _getCategoryValue(String category) {
+    switch (category) {
+      case 'Équipement':
+        return 'equipment';
+      case 'Secs':
+        return 'secs';
+      case 'Frais':
+        return 'frais';
+      default:
+        return 'all';
+    }
   }
 }

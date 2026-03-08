@@ -40,7 +40,7 @@ class _StockPageState extends State<StockPage> {
 
               if (products.isEmpty) {
                 return const Center(
-                  child: Text('No products in this category.'),
+                  child: Text('Aucun produit dans cette catégorie.'),
                 );
               }
               return ListView.builder(
@@ -68,7 +68,7 @@ class _StockPageState extends State<StockPage> {
     // 2. Otherwise, show the Category Selection
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Stock Viewer'),
+        title: const Text('Visualiseur de Stock'),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () => Scaffold.of(context).openDrawer(),
@@ -79,21 +79,36 @@ class _StockPageState extends State<StockPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildCategoryCard('equipment', Icons.build, Colors.blue),
+            _buildCategoryCard(
+              'Équipement',
+              'equipment',
+              Icons.build,
+              Colors.blue,
+            ),
             const SizedBox(height: 16),
-            _buildCategoryCard('secs', Icons.grass, Colors.orange),
+            _buildCategoryCard('Secs', 'secs', Icons.grass, Colors.orange),
             const SizedBox(height: 16),
-            _buildCategoryCard('frais', Icons.ac_unit, Colors.lightBlue),
+            _buildCategoryCard(
+              'Frais',
+              'frais',
+              Icons.ac_unit,
+              Colors.lightBlue,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCategoryCard(String title, IconData icon, Color color) {
+  Widget _buildCategoryCard(
+    String title,
+    String categoryValue,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: InkWell(
-        onTap: () => setState(() => _selectedCategory = title),
+        onTap: () => setState(() => _selectedCategory = categoryValue),
         child: Card(
           color: color.withOpacity(0.1),
           elevation: 4,

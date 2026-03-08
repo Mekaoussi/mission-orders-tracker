@@ -37,7 +37,7 @@ class _MainScreenState extends State<MainScreen> {
                   Icon(Icons.inventory_2, color: Colors.white, size: 48),
                   SizedBox(height: 10),
                   Text(
-                    'Stock Manager',
+                    'Gestionnaire de Stock',
                     style: TextStyle(color: Colors.white, fontSize: 24),
                   ),
                 ],
@@ -45,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.admin_panel_settings),
-              title: const Text('Admin Panel'),
+              title: const Text("Panneau d'Administration"),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(

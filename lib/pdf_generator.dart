@@ -55,22 +55,22 @@ Future<void> generateMultiSortieReportPdf({
             ),
             pw.Divider(height: 40, thickness: 2),
             pw.Text(
-              "Rapport pour: ${person.name}",
+              "Rapport pour : ${person.name}",
               style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
             pw.Text(
-              "Rôle: ${person.role}",
+              "Rôle : ${person.role}",
               style: const pw.TextStyle(fontSize: 16),
             ),
             pw.Divider(height: 30),
             pw.Text(
-              "Période: ${dateFormat.format(startDate)} au ${dateFormat.format(endDate)}",
+              "Période : ${dateFormat.format(startDate)} au ${dateFormat.format(endDate)}",
               style: const pw.TextStyle(fontSize: 16),
             ),
             pw.SizedBox(height: 10),
             pw.Text(
-              "Nombre total de sorties (comme responsable): ${sorties.length}",
+              "Nombre total de sorties (comme responsable) : ${sorties.length}",
               style: const pw.TextStyle(fontSize: 16),
             ),
           ],
@@ -138,7 +138,7 @@ Future<void> generateSortiePdf(
     try {
       return people.firstWhere((p) => p.id == id).name;
     } catch (e) {
-      return 'Unknown';
+      return 'Inconnu';
     }
   }
 
@@ -146,7 +146,7 @@ Future<void> generateSortiePdf(
     try {
       return products.firstWhere((p) => p.id == id).name;
     } catch (e) {
-      return 'Unknown Product';
+      return 'Produit Inconnu';
     }
   }
 
@@ -403,7 +403,7 @@ pw.Widget _buildItemsTable(Sortie sortie, List<Product> allProducts) {
 
         final rowData = [
           pw.Text(
-            product?.name ?? 'Unknown',
+            product?.name ?? 'Inconnu',
             style: const pw.TextStyle(fontSize: 10),
           ),
           pw.Text(
