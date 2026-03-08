@@ -689,17 +689,76 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
   @override
   Widget build(BuildContext context) {
     final stockProvider = Provider.of<StockProvider>(context, listen: false);
+    final peopleProvider = Provider.of<PeopleProvider>(context, listen: false);
     final isReadOnly = widget.sortie.status == 'completed';
 
+    String getPersonName(String? id) {
+      if (id == null || id.isEmpty) return 'N/A';
+      try {
+        return peopleProvider.people.firstWhere((p) => p.id == id).name;
+      } catch (e) {
+        return 'Unknown Person';
+      }
+    }
+
+    String formatDate(DateTime date) {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Sortie Details')),
+      appBar: AppBar(title: Text('Details: Sortie ${widget.sortie.displayId}')),
       body: Column(
         children: [
-          // Header Info
-          ListTile(
-            title: Text('Status: ${widget.sortie.status.toUpperCase()}'),
-            subtitle: Text('Created: ${widget.sortie.creationDate}'),
-            tileColor: isReadOnly ? Colors.grey[200] : Colors.blue[50],
+          ExpansionTile(
+            title: const Text('Sortie Summary'),
+            initiallyExpanded: true,
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('Status'),
+                subtitle: Text(widget.sortie.status.toUpperCase()),
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_circle),
+                title: const Text('Responsible'),
+                subtitle: Text(getPersonName(widget.sortie.responsibleId)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.support_agent),
+                title: const Text('Guide'),
+                subtitle: Text(getPersonName(widget.sortie.guideId)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.soup_kitchen),
+                title: const Text('Cuisinier'),
+                subtitle: Text(getPersonName(widget.sortie.cuisinierId)),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.today),
+                title: const Text('Creation Date'),
+                subtitle: Text(formatDate(widget.sortie.creationDate)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.arrow_forward),
+                title: const Text('Departure Date'),
+                subtitle: Text(formatDate(widget.sortie.departureDate)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.arrow_back),
+                title: const Text('Return Date'),
+                subtitle: Text(formatDate(widget.sortie.returnDate)),
+              ),
+            ],
+          ),
+          const Divider(thickness: 2),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              'Items Details',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
           Expanded(
             child: ListView.builder(
