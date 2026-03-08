@@ -4,6 +4,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 
 import 'models.dart';
 import 'people_provider.dart';
+import 'pdf_generator.dart';
 import 'sortie_provider.dart';
 import 'stock_provider.dart';
 
@@ -707,7 +708,22 @@ class _SortieDetailPageState extends State<SortieDetailPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Details: Sortie ${widget.sortie.displayId}')),
+      appBar: AppBar(
+        title: Text('Details: Sortie ${widget.sortie.displayId}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Generate PDF',
+            onPressed: () {
+              generateSortiePdf(
+                widget.sortie,
+                stockProvider.products,
+                peopleProvider.people,
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           ExpansionTile(
